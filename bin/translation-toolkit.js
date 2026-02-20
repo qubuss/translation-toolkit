@@ -38,12 +38,14 @@ EXPORT OPTIONS
 
 IMPORT OPTIONS
   -m, --merge           Keep existing keys not in CSV (default: replace all)
+  -n, --dry-run         Show what would change without modifying any files
   -d, --dir <path>      Translations directory (default: auto-discover)
   -D, --delimiter <ch>  Column delimiter (default: |)
 
 PREVIEW OPTIONS
   -d, --dir <path>      Translations directory (default: auto-discover)
-  -p, --port <number>   HTTP server port (default: 3456)
+  -p, --port <number>   HTTP server port (default: 3456, auto-increments if busy)
+  -w, --watch           Auto-reload when .po files change
 
 VALIDATE OPTIONS
   -d, --dir <path>      Translations directory (default: auto-discover)
@@ -64,9 +66,10 @@ EXAMPLES
   translation-toolkit export -o translations.csv -d src/i18n
   translation-toolkit import translations.csv
   translation-toolkit import translations.csv --merge
+  translation-toolkit import translations.csv --dry-run
   translation-toolkit import translations.csv -d locales/
   translation-toolkit preview
-  translation-toolkit preview --port 8080
+  translation-toolkit preview --port 8080 --watch
   translation-toolkit validate
   translation-toolkit validate --dir src/i18n
   translation-toolkit stats

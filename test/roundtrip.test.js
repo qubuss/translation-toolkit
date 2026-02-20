@@ -134,3 +134,52 @@ describe(':: separator for msgctxt', () => {
     assert.ok(entries.has('button\x04Open'), 'Should have button\\x04Open after re-import');
   });
 });
+
+// ─── Dry-run mode ────────────────────────────────────────
+
+describe('import --dry-run', () => {
+  it('does not modify .po files in dry-run mode', async () => {
+    // Get original file contents
+    const enPath = path.join(TMP, 'en-US.po');
+    const plPath = path.join(TMP, 'pl-PL.po');
+    const originalEn = fs.readFileSync(enPath, 'utf-8');
+    const originalPl = fs.readFileSync(plPath, 'utf-8');
+
+    // Create a CSV with a changed value
+    const csvPath = path.join(TMP, 'dryrun-test.csv');
+    await exportToCsv(csvPath, TMP, '|');
+
+    // Modify CSV: add a new key
+    const csvContent = fs.readFileSync(csvPath, 'utf-8');
+    fs.writeFileSync(csvPath, csvContent + 'brand.new.key|New Value|Nowa Wartość\n');
+
+    // Import with dry-run
+    await importFromCsv(csvPath, false, TMP, '|', true);
+
+    // Files should be unchanged
+    assert.equal(fs.readFileSync(enPath, 'utf-8'), originalEn, 'en-US.po should not be modified in dry-run');
+    assert.equal(fs.readFileSync(plPath, 'utf-8'), originalPl, 'pl-PL.po should not be modified in dry-run');
+  });
+
+  it('dry-run reports added/changed/removed counts', async () => {
+    // Capture console output
+    const logs = [];
+    const origLog = console.log;
+    console.log = (...args) => logs.push(args.join(' '));
+
+    const csvPath = path.join(TMP, 'dryrun-report.csv');
+    await exportToCsv(csvPath, TMP, '|');
+
+    // Modify CSV: add a new key
+    const csvContent = fs.readFileSync(csvPath, 'utf-8');
+    fs.writeFileSync(csvPath, csvContent + 'brand.new.key|Added|Dodano\n');
+
+    await importFromCsv(csvPath, false, TMP, '|', true);
+    console.log = origLog;
+
+    const output = logs.join('\n');
+    assert.ok(output.includes('DRY RUN'), 'Should mention DRY RUN');
+    assert.ok(output.includes('Would update'), 'Should say "Would update"');
+    assert.ok(output.includes('+1 added'), 'Should report added keys');
+  });
+});

@@ -127,11 +127,12 @@ mainMenu.help|Help|Pomoc
 translation-toolkit import <file.csv> [options]
 ```
 
-| Option                 | Description                           | Default       |
-| ---------------------- | ------------------------------------- | ------------- |
-| `-m, --merge`          | Keep existing keys not present in CSV | replace all   |
-| `-d, --dir <path>`     | Translations directory                | auto-discover |
-| `-D, --delimiter <ch>` | Column delimiter                      | `\|`          |
+| Option                 | Description                                  | Default       |
+| ---------------------- | -------------------------------------------- | ------------- |
+| `-m, --merge`          | Keep existing keys not present in CSV        | replace all   |
+| `-n, --dry-run`        | Show what would change without writing files | off           |
+| `-d, --dir <path>`     | Translations directory                       | auto-discover |
+| `-D, --delimiter <ch>` | Column delimiter                             | `\|`          |
 
 ### Import modes
 
@@ -161,10 +162,13 @@ View all translations in an interactive table in your browser.
 translation-toolkit preview [options]
 ```
 
-| Option                | Description            | Default       |
-| --------------------- | ---------------------- | ------------- |
-| `-d, --dir <path>`    | Translations directory | auto-discover |
-| `-p, --port <number>` | HTTP server port       | `3456`        |
+| Option                | Description                       | Default       |
+| --------------------- | --------------------------------- | ------------- |
+| `-d, --dir <path>`    | Translations directory            | auto-discover |
+| `-p, --port <number>` | HTTP server port                  | `3456`        |
+| `-w, --watch`         | Auto-reload on `.po` file changes | off           |
+
+If the requested port is in use, the server automatically tries the next port (up to 20 attempts).
 
 Features of the preview page:
 
@@ -179,6 +183,7 @@ Features of the preview page:
 - **Diff tab** — upload CSV files to compare (CSV vs CSV or CSV vs current `.po`)
 - **Dark mode** — toggle via the 🌙 button in the header (remembers your preference)
 - **Save bar** — floating bar shows unsaved changes count with Save/Discard buttons
+- **Watch mode** — `--watch` auto-reloads data when `.po` files change on disk (refresh browser to see updates)
 
 ![Translations tab](docs/screenshots/translations_screen.png)
 
@@ -254,6 +259,16 @@ Exits with code 1 if differences found (useful for CI).
 
 ![Diff CSV vs CSV](docs/screenshots/diff_csv_csv.png)
 
+## Exit Codes
+
+All commands exit with code 0 on success. Some commands use non-zero exit codes to signal specific conditions:
+
+| Command    | Exit Code | Meaning                                   |
+| ---------- | --------- | ----------------------------------------- |
+| `validate` | `1`       | Validation errors found                   |
+| `diff`     | `1`       | Differences found (like Unix `diff`)      |
+| Any        | `1`       | Fatal error (missing file, invalid input) |
+
 ## Auto-Discovery
 
 When `--dir` is not specified, the tool recursively searches the current working directory for folders containing `.po` files. It skips `node_modules`, `.git`, `dist`, `build`, and other common non-source directories.
@@ -289,6 +304,9 @@ translation-toolkit export -D ";" -o translations.csv
 # Import with merge (don't delete missing keys)
 translation-toolkit import translations.csv --merge
 
+# Preview what import will change (without writing files)
+translation-toolkit import translations.csv --dry-run
+
 # Specify directory explicitly
 translation-toolkit export --dir src/i18n
 translation-toolkit import translations.csv --dir src/i18n
@@ -300,6 +318,7 @@ npx translation-toolkit export
 # Preview translations in browser (with editing, stats, diff, dark mode)
 translation-toolkit preview
 translation-toolkit preview --port 8080
+translation-toolkit preview --watch
 
 # Validate translations (CI-friendly)
 translation-toolkit validate
@@ -344,7 +363,17 @@ git diff src/translations/
 
 ## Limitations
 
-- Only supports simple `msgid`/`msgstr` pairs (no plural forms `msgid_plural`/`msgstr[N]` — coming in v1.2)
+- Only supports simple `msgid`/`msgstr` pairs (no plural forms `msgid_plural`/`msgstr[N]` — planned for Phase 2)
+
+## Roadmap
+
+| Phase | Feature                                                   | Status  |
+| ----- | --------------------------------------------------------- | ------- |
+| 1     | Core CLI (export, import, preview, validate, stats, diff) | ✅ Done |
+| 1.3   | DX improvements (dry-run, watch mode, port auto-detect)   | ✅ Done |
+| 2     | Plural forms (`msgid_plural` / `msgstr[N]`)               | 🔜 Next |
+| 3     | Additional formats: JSON, XLIFF, Android XML              | Planned |
+| 4     | Custom validation rules                                   | Planned |
 
 ## Contributing
 
