@@ -73,10 +73,18 @@ describe('formatPoString', () => {
     ]);
   });
 
-  it('wraps very long strings', () => {
+  it('keeps very long strings on single line (no newlines)', () => {
     const long = 'a'.repeat(200);
     const result = formatPoString('msgid', long);
-    // Should still be single line if no newlines (our implementation splits on \\n only)
+    // No embedded newlines → stays single-line regardless of length
+    assert.equal(result.length, 1);
+    assert.equal(result[0], 'msgid "' + long + '"');
+  });
+
+  it('wraps long strings when explicit maxLen is provided', () => {
+    const long = 'a'.repeat(200);
+    const result = formatPoString('msgid', long, 76);
+    // With explicit maxLen, should wrap
     assert.equal(result.length, 2); // msgid "" + one continuation line
     assert.equal(result[0], 'msgid ""');
   });
