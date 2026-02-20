@@ -1,10 +1,28 @@
 msgid ""
 msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "Language: en-US\n"
+"MIME-Version: 1.0\n"
+
+# ─── Basic entries ─────────────────────────────────────────
 
 msgid "simple.key"
 msgstr "Simple value"
+
+msgid "another.key"
+msgstr "Another value"
+
+# ─── Empty / missing translations ──────────────────────────
+
+msgid "empty.value"
+msgstr ""
+
+msgid "whitespace.only"
+msgstr "   "
+
+# ─── Multi-line continuation strings ──────────────────────
 
 msgid ""
 "This is a very long string that needs to be "
@@ -19,6 +37,86 @@ msgstr ""
 "Second line\n"
 "Third line"
 
+msgid "leading.newline"
+msgstr ""
+"\n"
+"Text after leading newline"
+
+msgid "trailing.newline"
+msgstr ""
+"Text before trailing newline\n"
+
+msgid "multiple.newlines"
+msgstr ""
+"Line one\n"
+"\n"
+"\n"
+"Line four after two blanks"
+
+msgid "only.newline"
+msgstr "\n"
+
+# ─── Special characters & escaping ────────────────────────
+
+msgid "special.chars"
+msgstr "Quotes: \"hello\" and backslash: \\ done"
+
+msgid "tabs.in.string"
+msgstr "Col1\tCol2\tCol3"
+
+msgid "mixed.escapes"
+msgstr "Line1\\nNot-a-newline then real:\nnew line here\ttab"
+
+# ─── Unicode ──────────────────────────────────────────────
+
+msgid "unicode.accents"
+msgstr "Ąćęłńóśźż ĄĆĘŁŃÓŚŹŻ àáâãäå"
+
+msgid "unicode.emoji"
+msgstr "Hello 🌍🚀✨ World 👋"
+
+msgid "unicode.cjk"
+msgstr "日本語テスト 中文测试 한국어"
+
+msgid "unicode.rtl"
+msgstr "مرحبا بالعالم"
+
+msgid "unicode.math"
+msgstr "∑∏∫√∞≈≠≤≥"
+
+# ─── HTML content ─────────────────────────────────────────
+
+msgid "html.tags"
+msgstr "<strong>Bold</strong> and <a href=\"https://example.com\">link</a>"
+
+msgid "html.entities"
+msgstr "5 &gt; 3 &amp; 2 &lt; 4"
+
+msgid "html.multiline"
+msgstr ""
+"<div class=\"container\">\n"
+"  <p>Paragraph one</p>\n"
+"  <p>Paragraph two</p>\n"
+"</div>"
+
+# ─── Placeholders & format strings ────────────────────────
+
+#, c-format
+msgid "format.printf"
+msgstr "Hello %s, you have %d messages"
+
+#, python-brace-format
+msgid "format.python.brace"
+msgstr "Hello {name}, you have {count} messages"
+
+msgid "format.icu"
+msgstr "{count, plural, one {# item} other {# items}}"
+
+msgid "format.template"
+msgstr "Welcome {{username}}, your balance is ${{amount}}"
+
+# ─── msgctxt (disambiguation context) ─────────────────────
+
 msgctxt "menu"
 msgid "Open"
 msgstr "Open"
@@ -27,8 +125,102 @@ msgctxt "button"
 msgid "Open"
 msgstr "Open file"
 
-msgid "empty.value"
-msgstr ""
+msgctxt "dialog.title"
+msgid "Open"
+msgstr "Open Document"
 
-msgid "special.chars"
-msgstr "Quotes: \"hello\" and backslash: \\ done"
+msgctxt "navigation"
+msgid "simple.key"
+msgstr "Simple key in navigation context"
+
+msgctxt "context.with.special"
+msgid "ctx.special"
+msgstr "Context has special chars"
+
+# ─── Comment types (translator, extracted, reference, flags) ─
+
+# Translator comment — general note
+#. Extracted comment from source code
+#: src/components/Header.tsx:42
+#: src/components/Footer.tsx:18
+#, fuzzy
+msgid "commented.entry"
+msgstr "This entry has all comment types"
+
+# Simple translator comment
+msgid "translator.comment.only"
+msgstr "Has translator comment"
+
+#. Extracted developer note: this appears in the navbar
+msgid "extracted.comment"
+msgstr "Has extracted comment"
+
+#: src/utils/messages.ts:99
+msgid "reference.comment"
+msgstr "Has file reference"
+
+#, fuzzy, c-format
+msgid "fuzzy.entry"
+msgstr "This translation needs review: %s"
+
+# ─── Previous msgid (for fuzzy tracking) ──────────────────
+
+#, fuzzy
+#| msgid "old.key.name"
+msgid "new.key.name"
+msgstr "Value from old key"
+
+#| msgid "previous.source"
+msgid "updated.source"
+msgstr "Updated translation"
+
+# ─── Edge cases with delimiters & quoting ─────────────────
+
+msgid "pipe.delimiter"
+msgstr "Value with | pipe character"
+
+msgid "many.pipes"
+msgstr "a|b|c|d|e"
+
+msgid "csv.tricky"
+msgstr "Contains \"quotes\" and |pipes| and\nnewlines"
+
+msgid "semicolons"
+msgstr "key1=val1; key2=val2; key3=val3"
+
+msgid "commas.everywhere"
+msgstr "one, two, three, four"
+
+# ─── Numeric and single-char values ──────────────────────
+
+msgid "numeric.value"
+msgstr "12345"
+
+msgid "single.char"
+msgstr "X"
+
+msgid "single.space"
+msgstr " "
+
+# ─── Very long single-line (import format preservation) ───
+
+msgid "long.singleline"
+msgstr "This is an intentionally very long single-line string that should remain on a single line after import to avoid unnecessary git diff noise in the project repository when round-tripping through CSV export and import operations."
+
+# ─── Multiline msgctxt ───────────────────────────────────
+
+msgctxt ""
+"long.context.that.wraps"
+msgid "multiline.ctx"
+msgstr "Entry with multiline msgctxt"
+
+# ─── Nested quotes and complex escaping ───────────────────
+
+msgid "nested.quotes"
+msgstr "She said: \"He said: \\\"hello\\\"\""
+
+msgid "backslash.newline"
+msgstr "C:\\Users\\john\\Documents\\file.txt"
+
+msgid "url.value"
+msgstr "https://example.com/path?key=value&other=123#anchor"

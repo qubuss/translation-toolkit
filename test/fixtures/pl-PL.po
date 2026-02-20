@@ -1,10 +1,28 @@
 msgid ""
 msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
 "Language: pl-PL\n"
+"MIME-Version: 1.0\n"
+
+# ─── Basic entries ─────────────────────────────────────────
 
 msgid "simple.key"
 msgstr "Prosta wartość"
+
+msgid "another.key"
+msgstr "Inna wartość"
+
+# ─── Empty / missing translations ──────────────────────────
+
+msgid "empty.value"
+msgstr ""
+
+msgid "whitespace.only"
+msgstr "   "
+
+# ─── Multi-line continuation strings ──────────────────────
 
 msgid ""
 "This is a very long string that needs to be "
@@ -19,6 +37,86 @@ msgstr ""
 "Druga linia\n"
 "Trzecia linia"
 
+msgid "leading.newline"
+msgstr ""
+"\n"
+"Tekst po początkowej nowej linii"
+
+msgid "trailing.newline"
+msgstr ""
+"Tekst przed końcową nową linią\n"
+
+msgid "multiple.newlines"
+msgstr ""
+"Linia pierwsza\n"
+"\n"
+"\n"
+"Linia czwarta po dwóch pustych"
+
+msgid "only.newline"
+msgstr "\n"
+
+# ─── Special characters & escaping ────────────────────────
+
+msgid "special.chars"
+msgstr "Cudzysłowy: \"witaj\" i backslash: \\ gotowe"
+
+msgid "tabs.in.string"
+msgstr "Kol1\tKol2\tKol3"
+
+msgid "mixed.escapes"
+msgstr "Linia1\\nNie-nowa-linia potem prawdziwa:\nnowa linia tutaj\ttab"
+
+# ─── Unicode ──────────────────────────────────────────────
+
+msgid "unicode.accents"
+msgstr "Ąćęłńóśźż ĄĆĘŁŃÓŚŹŻ àáâãäå"
+
+msgid "unicode.emoji"
+msgstr "Witaj 🌍🚀✨ Świecie 👋"
+
+msgid "unicode.cjk"
+msgstr "日本語テスト 中文测试 한국어"
+
+msgid "unicode.rtl"
+msgstr "مرحبا بالعالم"
+
+msgid "unicode.math"
+msgstr "∑∏∫√∞≈≠≤≥"
+
+# ─── HTML content ─────────────────────────────────────────
+
+msgid "html.tags"
+msgstr "<strong>Pogrubienie</strong> i <a href=\"https://example.com\">link</a>"
+
+msgid "html.entities"
+msgstr "5 &gt; 3 &amp; 2 &lt; 4"
+
+msgid "html.multiline"
+msgstr ""
+"<div class=\"kontener\">\n"
+"  <p>Akapit pierwszy</p>\n"
+"  <p>Akapit drugi</p>\n"
+"</div>"
+
+# ─── Placeholders & format strings ────────────────────────
+
+#, c-format
+msgid "format.printf"
+msgstr "Witaj %s, masz %d wiadomości"
+
+#, python-brace-format
+msgid "format.python.brace"
+msgstr "Witaj {name}, masz {count} wiadomości"
+
+msgid "format.icu"
+msgstr "{count, plural, one {# element} few {# elementy} other {# elementów}}"
+
+msgid "format.template"
+msgstr "Witaj {{username}}, Twoje saldo to ${{amount}}"
+
+# ─── msgctxt (disambiguation context) ─────────────────────
+
 msgctxt "menu"
 msgid "Open"
 msgstr "Otwórz"
@@ -27,8 +125,102 @@ msgctxt "button"
 msgid "Open"
 msgstr "Otwórz plik"
 
-msgid "empty.value"
-msgstr ""
+msgctxt "dialog.title"
+msgid "Open"
+msgstr "Otwórz dokument"
 
-msgid "special.chars"
-msgstr "Cudzysłowy: \"witaj\" i backslash: \\ gotowe"
+msgctxt "navigation"
+msgid "simple.key"
+msgstr "Prosty klucz w kontekście nawigacji"
+
+msgctxt "context.with.special"
+msgid "ctx.special"
+msgstr "Kontekst ma specjalne znaki"
+
+# ─── Comment types (translator, extracted, reference, flags) ─
+
+# Komentarz tłumacza — ogólna notatka
+#. Komentarz wyodrębniony z kodu źródłowego
+#: src/components/Header.tsx:42
+#: src/components/Footer.tsx:18
+#, fuzzy
+msgid "commented.entry"
+msgstr "Ten wpis ma wszystkie typy komentarzy"
+
+# Prosty komentarz tłumacza
+msgid "translator.comment.only"
+msgstr "Ma komentarz tłumacza"
+
+#. Wyodrębniona notatka dewelopera: pojawia się w pasku nawigacji
+msgid "extracted.comment"
+msgstr "Ma wyodrębniony komentarz"
+
+#: src/utils/messages.ts:99
+msgid "reference.comment"
+msgstr "Ma referencję do pliku"
+
+#, fuzzy, c-format
+msgid "fuzzy.entry"
+msgstr "To tłumaczenie wymaga przeglądu: %s"
+
+# ─── Previous msgid (for fuzzy tracking) ──────────────────
+
+#, fuzzy
+#| msgid "old.key.name"
+msgid "new.key.name"
+msgstr "Wartość ze starego klucza"
+
+#| msgid "previous.source"
+msgid "updated.source"
+msgstr "Zaktualizowane tłumaczenie"
+
+# ─── Edge cases with delimiters & quoting ─────────────────
+
+msgid "pipe.delimiter"
+msgstr "Wartość ze znakiem | pipe"
+
+msgid "many.pipes"
+msgstr "a|b|c|d|e"
+
+msgid "csv.tricky"
+msgstr "Zawiera \"cudzysłowy\" i |znaki pipe| oraz\nnowe linie"
+
+msgid "semicolons"
+msgstr "klucz1=wart1; klucz2=wart2; klucz3=wart3"
+
+msgid "commas.everywhere"
+msgstr "jeden, dwa, trzy, cztery"
+
+# ─── Numeric and single-char values ──────────────────────
+
+msgid "numeric.value"
+msgstr "12345"
+
+msgid "single.char"
+msgstr "X"
+
+msgid "single.space"
+msgstr " "
+
+# ─── Very long single-line (import format preservation) ───
+
+msgid "long.singleline"
+msgstr "To jest celowo bardzo długi jednoliniowy ciąg znaków, który powinien pozostać w jednej linii po imporcie, aby uniknąć niepotrzebnego szumu w git diff w repozytorium projektu podczas eksportu i importu przez CSV."
+
+# ─── Multiline msgctxt ───────────────────────────────────
+
+msgctxt ""
+"long.context.that.wraps"
+msgid "multiline.ctx"
+msgstr "Wpis z wieloliniowym msgctxt"
+
+# ─── Nested quotes and complex escaping ───────────────────
+
+msgid "nested.quotes"
+msgstr "Ona powiedziała: \"On powiedział: \\\"cześć\\\"\""
+
+msgid "backslash.newline"
+msgstr "C:\\Użytkownicy\\jan\\Dokumenty\\plik.txt"
+
+msgid "url.value"
+msgstr "https://example.com/path?key=value&other=123#anchor"
