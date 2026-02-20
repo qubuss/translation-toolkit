@@ -6,7 +6,7 @@ Wklej poniższy prompt w czacie nowego projektu (który ma pliki .po):
 
 ## PROMPT START
 
-Zainstaluj i przetestuj narzędzie `translation-toolkit@1.2.0` (npm) na tym projekcie.
+Zainstaluj i przetestuj narzędzie `translation-toolkit@1.3.0` (npm) na tym projekcie.
 Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj raport.
 
 > Komendy: `export`, `import`, `preview`, `validate`, `stats`, `diff`
@@ -14,8 +14,8 @@ Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj 
 ### 0. Instalacja
 
 ```bash
-npm install -g translation-toolkit@1.2.0
-translation-toolkit --version   # powinno wypisać 1.2.0
+npm install -g translation-toolkit@1.3.0
+translation-toolkit --version   # powinno wypisać 1.3.0
 ```
 
 ### 1. Odkrywanie plików .po
@@ -59,7 +59,23 @@ Checklist:
 - [ ] Wieloliniowe wartości są w jednej komórce (w cudzysłowach CSV)
 - [ ] Znaki specjalne (`\"`, `\t`, `\n`) poprawnie wyeksportowane
 
-### 3. Test IMPORT round-trip (CSV → po → CSV)
+### 3. Test IMPORT --dry-run
+
+```bash
+# Dodaj nowy klucz do CSV
+cp /tmp/tt-test-export.csv /tmp/tt-test-dryrun.csv
+echo '"DRYRUN_KEY","dry en","dry pl"' >> /tmp/tt-test-dryrun.csv
+
+translation-toolkit import /tmp/tt-test-dryrun.csv --dir "$PO_DIR" --dry-run
+```
+
+Checklist:
+
+- [ ] Wypisuje "DRY RUN — no files will be modified."
+- [ ] Pokazuje "Would update: ..." z liczbą kluczy (+added, ~changed, -removed)
+- [ ] Pliki `.po` NIE zostały zmienione (sprawdź `git status` lub `diff`)
+
+### 4. Test IMPORT round-trip (CSV → po → CSV)
 
 ```bash
 rm -rf /tmp/tt-test-reimport
@@ -95,7 +111,7 @@ Checklist:
 - [ ] Długie single-line `msgstr` NIE zostały złamane na wiele linii
 - [ ] Wieloliniowe `msgstr` zachowały swój oryginalny podział
 
-### 4. Test VALIDATE
+### 5. Test VALIDATE
 
 ```bash
 translation-toolkit validate --dir "$PO_DIR"
@@ -109,7 +125,7 @@ Checklist:
 - [ ] Klucze z `msgctxt` wyświetlają się jako `kontekst::klucz` (nie znak `\x04`)
 - [ ] Raport jest czytelny i sensowny
 
-### 5. Test STATS
+### 6. Test STATS
 
 ```bash
 translation-toolkit stats --dir "$PO_DIR"
@@ -122,9 +138,9 @@ Checklist:
 - [ ] Lista top missing keys jest sensowna
 - [ ] Overall coverage się zgadza (policz ręcznie dla jednego języka jeśli wątpliwości)
 
-### 6. Test DIFF
+### 7. Test DIFF
 
-**6a. CSV vs CSV (ze zmianami):**
+**7a. CSV vs CSV (ze zmianami):**
 
 ```bash
 cp /tmp/tt-test-export.csv /tmp/tt-test-modified.csv
@@ -148,7 +164,7 @@ Checklist:
 - [ ] Wykrywa usunięty klucz
 - [ ] Wykrywa dodany klucz
 
-**6b. CSV vs .po (powinno być identyczne):**
+**7b. CSV vs .po (powinno być identyczne):**
 
 ```bash
 translation-toolkit diff /tmp/tt-test-export.csv --dir "$PO_DIR"
@@ -158,7 +174,7 @@ Checklist:
 
 - [ ] Wynik: "No differences" (bo CSV pochodzi z tych samych .po)
 
-### 7. Test PREVIEW
+### 8. Test PREVIEW
 
 ```bash
 translation-toolkit preview --dir "$PO_DIR" --port 3456
@@ -182,7 +198,44 @@ Checklist:
 
 Po teście zatrzymaj serwer (Ctrl+C).
 
-### 8. Edge cases
+**8a. Test port auto-increment:**
+
+```bash
+# Zajmij port 3456, uruchom preview na tym samym porcie
+node -e "require('net').createServer().listen(3456, () => console.log('blocking 3456'))" &
+BLOCKER_PID=$!
+translation-toolkit preview --dir "$PO_DIR" --port 3456 &
+PREVIEW_PID=$!
+sleep 2
+curl -s http://localhost:3457/ | head -3
+kill $PREVIEW_PID $BLOCKER_PID 2>/dev/null
+```
+
+Checklist:
+
+- [ ] Wypisuje "Port 3456 is in use, trying 3457..."
+- [ ] Serwer uruchamia się na porcie 3457
+- [ ] Informacja "(requested port 3456 was in use)" w output
+
+**8b. Test --watch mode:**
+
+```bash
+translation-toolkit preview --dir "$PO_DIR" --port 3458 --watch &
+WATCH_PID=$!
+sleep 2
+# Zmodyfikuj plik .po i sprawdź czy serwer przeładował
+touch "$PO_DIR"/*.po
+sleep 1
+kill $WATCH_PID 2>/dev/null
+```
+
+Checklist:
+
+- [ ] Wypisuje "Watching for .po changes..." na starcie
+- [ ] Po `touch` wypisuje "↻ Reloaded (... changed)"
+- [ ] Serwer dalej działa po przeładowaniu
+
+### 9. Edge cases
 
 Sprawdź które z poniższych występują w projekcie i czy są obsłużone:
 
@@ -195,12 +248,12 @@ Sprawdź które z poniższych występują w projekcie i czy są obsłużone:
 - [ ] Wpisy z flagą `fuzzy` — czy są wykrywane w validate?
 - [ ] Klucze z cudzysłowami lub przecinkami w wartości — czy CSV jest poprawny?
 
-### 9. RAPORT KOŃCOWY
+### 10. RAPORT KOŃCOWY
 
 Wygeneruj raport **dokładnie** w poniższym formacie:
 
 ```
-## Translation Toolkit v1.2.0 — Test Report
+## Translation Toolkit v1.3.0 — Test Report
 
 **Projekt**: [nazwa projektu]
 **Pliki .po**: X plików, Y języków
@@ -214,17 +267,20 @@ Wygeneruj raport **dokładnie** w poniższym formacie:
 | 0 | Instalacja | ✅/❌ | wersja: |
 | 1 | Export (po→CSV) | ✅/❌ | X kluczy × Y języków |
 | 2 | Import round-trip (CSV diff) | ✅/❌ | diff pusty? |
-| 3 | Import format preservation (.po diff) | ✅/❌ | pliki .po bez zmian formatu? |
-| 4 | Validate | ✅/❌ | X errors, Y warnings |
-| 5 | Stats | ✅/❌ | overall coverage: X% |
-| 6a | Diff (CSV vs CSV) | ✅/❌ | wykrywa zmiany/dodane/usunięte? |
-| 6b | Diff (CSV vs .po) | ✅/❌ | "No differences"? |
-| 7 | Preview server | ✅/❌ | tabela renderuje wiersze? |
-| 8 | Multiline strings | ✅/❌/N/A | |
-| 9 | msgctxt support | ✅/❌/N/A | |
-| 10 | Special characters | ✅/❌ | |
-| 11 | Comments preservation | ✅/❌/N/A | |
-| 12 | Edge cases | ✅/❌ | |
+| 3 | Import --dry-run | ✅/❌ | pliki niezmienione? raport poprawny? |
+| 4 | Import format preservation (.po diff) | ✅/❌ | pliki .po bez zmian formatu? |
+| 5 | Validate | ✅/❌ | X errors, Y warnings |
+| 6 | Stats | ✅/❌ | overall coverage: X% |
+| 7a | Diff (CSV vs CSV) | ✅/❌ | wykrywa zmiany/dodane/usunięte? |
+| 7b | Diff (CSV vs .po) | ✅/❌ | "No differences"? |
+| 8 | Preview server | ✅/❌ | tabela renderuje wiersze? |
+| 8a | Preview port auto-increment | ✅/❌ | przeskakuje na wolny port? |
+| 8b | Preview --watch | ✅/❌ | przeładowuje po zmianie .po? |
+| 9 | Multiline strings | ✅/❌/N/A | |
+| 10 | msgctxt support | ✅/❌/N/A | |
+| 11 | Special characters | ✅/❌ | |
+| 12 | Comments preservation | ✅/❌/N/A | |
+| 13 | Edge cases | ✅/❌ | |
 
 ### Błędy / problemy
 
