@@ -11,6 +11,7 @@ A zero-dependency CLI tool to convert between [GNU gettext `.po`](https://www.gn
 ## Table of Contents
 
 - [Features](#features)
+- [Screenshots](#screenshots)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Usage](#usage)
@@ -43,6 +44,38 @@ A zero-dependency CLI tool to convert between [GNU gettext `.po`](https://www.gn
 - **Diff** — compare two CSV files or a CSV against current `.po` files
 - **Dark mode** — toggle between light and dark themes in the browser preview
 - **Interactive** — if multiple `.po` directories exist, prompts you to choose
+
+## Screenshots
+
+### Translations tab
+
+Browse, search, and inline-edit all translations in a single table.
+
+![Translations tab](docs/screenshots/translations_screen.png)
+
+### Validation tab
+
+Spot missing keys, empty translations, and variable mismatches at a glance.
+
+![Validation tab](docs/screenshots/validation_screen.png)
+
+### Statistics tab
+
+Per-language coverage bars, key counts, and top missing keys.
+
+![Statistics tab](docs/screenshots/statistics_screen.png)
+
+### Diff tab — CSV vs CSV
+
+Compare two CSV exports side by side — see added, removed, and changed keys.
+
+![Diff CSV vs CSV](docs/screenshots/diff_csv_csv.png)
+
+### Diff tab — CSV vs .po
+
+Compare a CSV against the current `.po` files to review pending changes.
+
+![Diff CSV vs .po](docs/screenshots/diff_csv_po.png)
 
 ## Installation
 
@@ -147,6 +180,8 @@ Features of the preview page:
 - **Dark mode** — toggle via the 🌙 button in the header (remembers your preference)
 - **Save bar** — floating bar shows unsaved changes count with Save/Discard buttons
 
+![Translations tab](docs/screenshots/translations_screen.png)
+
 ### Validate (check translations)
 
 Check all `.po` files for common issues. Useful in CI pipelines (exits with code 1 on errors).
@@ -168,6 +203,8 @@ Checks performed:
 
 The reference language is auto-detected as the one with the most keys (typically `en`).
 
+![Validation tab](docs/screenshots/validation_screen.png)
+
 ### Statistics
 
 Show translation coverage statistics per language.
@@ -187,6 +224,8 @@ Shows for each language:
 - **Empty, missing, extra** key counts
 - **Top missing keys** (first 5)
 - **Overall coverage** across all languages
+
+![Statistics tab](docs/screenshots/statistics_screen.png)
 
 ### Diff (compare translations)
 
@@ -212,6 +251,8 @@ Detects:
 - **Changed values** — same key, different translation (per-language)
 
 Exits with code 1 if differences found (useful for CI).
+
+![Diff CSV vs CSV](docs/screenshots/diff_csv_csv.png)
 
 ## Auto-Discovery
 
