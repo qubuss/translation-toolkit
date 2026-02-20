@@ -1,0 +1,50 @@
+{
+  "name": "translation-toolkit",
+  "version": "1.1.0",
+  "description": "Zero-dependency CLI toolkit for managing .po translation files — export to CSV, import, browser preview with inline editing, validate, stats, and diff.",
+  "keywords": [
+    "po",
+    "gettext",
+    "csv",
+    "translation",
+    "i18n",
+    "l10n",
+    "internationalization",
+    "localization",
+    "converter",
+    "export",
+    "import",
+    "validate",
+    "preview",
+    "statistics",
+    "diff",
+    "browser",
+    "cli"
+  ],
+  "author": "Jakub Fryga",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/qubuss/translation-toolkit.git"
+  },
+  "homepage": "https://github.com/qubuss/translation-toolkit#readme",
+  "bugs": {
+    "url": "https://github.com/qubuss/translation-toolkit/issues"
+  },
+  "bin": {
+    "translation-toolkit": "./bin/translation-toolkit.js"
+  },
+  "main": "./lib/poParser.js",
+  "files": [
+    "bin/",
+    "lib/",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=14"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
+}

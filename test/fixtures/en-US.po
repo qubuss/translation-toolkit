@@ -1,0 +1,34 @@
+msgid ""
+msgstr ""
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"Language: en-US\n"
+
+msgid "simple.key"
+msgstr "Simple value"
+
+msgid ""
+"This is a very long string that needs to be "
+"wrapped across multiple lines for readability."
+msgstr ""
+"This is a very long string that needs to be "
+"wrapped across multiple lines for readability."
+
+msgid "with.newlines"
+msgstr ""
+"First line\n"
+"Second line\n"
+"Third line"
+
+msgctxt "menu"
+msgid "Open"
+msgstr "Open"
+
+msgctxt "button"
+msgid "Open"
+msgstr "Open file"
+
+msgid "empty.value"
+msgstr ""
+
+msgid "special.chars"
+msgstr "Quotes: \"hello\" and backslash: \\ done"

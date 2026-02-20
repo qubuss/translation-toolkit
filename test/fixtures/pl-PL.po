@@ -1,0 +1,34 @@
+msgid ""
+msgstr ""
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2)\n"
+"Language: pl-PL\n"
+
+msgid "simple.key"
+msgstr "Prosta wartość"
+
+msgid ""
+"This is a very long string that needs to be "
+"wrapped across multiple lines for readability."
+msgstr ""
+"To jest bardzo długi ciąg znaków, który musi być "
+"zawinięty w wielu liniach dla czytelności."
+
+msgid "with.newlines"
+msgstr ""
+"Pierwsza linia\n"
+"Druga linia\n"
+"Trzecia linia"
+
+msgctxt "menu"
+msgid "Open"
+msgstr "Otwórz"
+
+msgctxt "button"
+msgid "Open"
+msgstr "Otwórz plik"
+
+msgid "empty.value"
+msgstr ""
+
+msgid "special.chars"
+msgstr "Cudzysłowy: \"witaj\" i backslash: \\ gotowe"
