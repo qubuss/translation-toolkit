@@ -266,6 +266,7 @@ Przykłady anomalii:
 - Cokolwiek, co sprawia, że musisz się zatrzymać i pomyśleć "to dziwne"
 
 Dla każdej anomalii zanotuj:
+
 1. **Przy którym kroku** wystąpiła
 2. **Co się stało** (dokładny output)
 3. **Co oczekiwałeś**

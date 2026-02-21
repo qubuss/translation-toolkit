@@ -371,7 +371,8 @@ git diff src/translations/
 | ----- | --------------------------------------------------------- | ------- |
 | 1     | Core CLI (export, import, preview, validate, stats, diff) | ✅ Done |
 | 1.3   | DX improvements (dry-run, watch mode, port auto-detect)   | ✅ Done |
-| 2     | Plural forms (`msgid_plural` / `msgstr[N]`)               | 🔜 Next |
+| 1.4   | Static preview export (`--static`) for GitHub Pages       | 🔜 Next |
+| 2     | Plural forms (`msgid_plural` / `msgstr[N]`)               | Planned |
 | 3     | Additional formats: JSON, XLIFF, Android XML              | Planned |
 | 4     | Custom validation rules                                   | Planned |
 
