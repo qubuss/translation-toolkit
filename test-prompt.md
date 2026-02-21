@@ -248,7 +248,30 @@ Sprawdź które z poniższych występują w projekcie i czy są obsłużone:
 - [ ] Wpisy z flagą `fuzzy` — czy są wykrywane w validate?
 - [ ] Klucze z cudzysłowami lub przecinkami w wartości — czy CSV jest poprawny?
 
-### 10. RAPORT KOŃCOWY
+### 10. Anomalie i niestandardowe zachowania
+
+**WAŻNE**: Przez cały czas testowania notuj WSZYSTKIE niespodziewane zachowania, nawet jeśli nie są błędami. Anomalie to rzeczy, które Cię zaskoczyły, wymagały dodatkowej interwencji lub mogą być problemem dla innych użytkowników.
+
+Przykłady anomalii:
+
+- Port zajęty → serwer nie startuje (lub automatycznie przeskakuje)
+- Nieoczekiwane warningi w konsoli
+- Długi czas wykonania komendy (>5 s)
+- Dziwne formatowanie outputu (znaki sterujące, broken UTF-8)
+- Proces nie kończy się po Ctrl+C (trzeba kill)
+- Plik tymczasowy nie został usunięty
+- Komenda zwraca exit code 0 mimo błędu (lub odwrotnie)
+- Brakujące/nadmiarowe puste linie w output
+- Nieczytelne komunikaty błędów (brak kontekstu, stacktrace zamiast ludzkiego opisu)
+- Cokolwiek, co sprawia, że musisz się zatrzymać i pomyśleć "to dziwne"
+
+Dla każdej anomalii zanotuj:
+1. **Przy którym kroku** wystąpiła
+2. **Co się stało** (dokładny output)
+3. **Co oczekiwałeś**
+4. **Czy to blocker** (uniemożliwia dalszą pracę) czy tylko irytujące
+
+### 11. RAPORT KOŃCOWY
 
 Wygeneruj raport **dokładnie** w poniższym formacie:
 
@@ -281,6 +304,14 @@ Wygeneruj raport **dokładnie** w poniższym formacie:
 | 11 | Special characters | ✅/❌ | |
 | 12 | Comments preservation | ✅/❌/N/A | |
 | 13 | Edge cases | ✅/❌ | |
+
+### Anomalie
+
+| # | Krok | Opis | Oczekiwane | Severity |
+|---|------|------|------------|----------|
+| A1 | [nr kroku] | co się stało | co powinno się stać | blocker / minor / cosmetic |
+
+(usuń wiersz A1 jeśli brak anomalii, lub dodaj A2, A3… dla kolejnych)
 
 ### Błędy / problemy
 
