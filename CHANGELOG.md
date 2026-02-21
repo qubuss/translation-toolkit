@@ -3,6 +3,19 @@
 All notable changes to **translation-toolkit** are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.3.1] — 2026-02-20
+
+### Fixed
+
+- **BLOCKER — Preview: `--watch` crash** — `fs` module was never required in `preview.js`, causing `fs is not defined` when `--watch` mode tried to call `fs.watch()`
+- **Preview: table header row stuck at 4th position** — replaced hardcoded CSS `top` pixel values (54 px / 98 px / 152 px) with CSS custom properties (`--header-h`, `--tabs-h`, `--toolbar-h`) measured at runtime via `ResizeObserver`, so the sticky offsets always match actual rendered heights
+- **Import: multiline Plural-Forms header normalised to single line** — new `patchPoFile()` function edits `.po` files in-place, preserving the original header block byte-for-byte instead of regenerating it from metadata
+- **Import: blank-line pattern changed between entries** — `patchPoFile()` preserves original comments, blank lines, and string formatting; only the `msgstr` value of changed entries is rewritten
+
+### Changed
+
+- Import now uses `patchPoFile()` (in-place patch) instead of `writePo()` (full regeneration) for existing `.po` files
+
 ## [1.3.0] — 2026-02-20
 
 ### Added
