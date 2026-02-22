@@ -6,7 +6,7 @@ Wklej poniższy prompt w czacie nowego projektu (który ma pliki .po):
 
 ## PROMPT START
 
-Zainstaluj i przetestuj narzędzie `translation-toolkit@1.3.0` (npm) na tym projekcie.
+Zainstaluj i przetestuj narzędzie `translation-toolkit@1.3.1` (npm) na tym projekcie.
 Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj raport.
 
 > Komendy: `export`, `import`, `preview`, `validate`, `stats`, `diff`
@@ -14,8 +14,8 @@ Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj 
 ### 0. Instalacja
 
 ```bash
-npm install -g translation-toolkit@1.3.0
-translation-toolkit --version   # powinno wypisać 1.3.0
+npm install -g translation-toolkit@1.3.1
+translation-toolkit --version   # powinno wypisać 1.3.1
 ```
 
 ### 1. Odkrywanie plików .po
@@ -110,6 +110,9 @@ Checklist:
 - [ ] Pliki `.po` nie zostały przeformatowane (diff pusty lub minimalne różnice)
 - [ ] Długie single-line `msgstr` NIE zostały złamane na wiele linii
 - [ ] Wieloliniowe `msgstr` zachowały swój oryginalny podział
+- [ ] **[v1.3.1 FIX]** Nagłówek `Plural-Forms` wieloliniowy (continuation line) zachował oryginalny podział linii (nie został znormalizowany do jednej linii)
+- [ ] **[v1.3.1 FIX]** Puste linie między wpisami zachowały oryginalny wzorzec (nie zostały dodane/usunięte)
+- [ ] **[v1.3.1 FIX]** Komentarze (`#.`, `#:`, `#,`) zachowane byte-for-byte
 
 ### 5. Test VALIDATE
 
@@ -191,6 +194,7 @@ Checklist:
 - [ ] Serwer startuje bez błędów
 - [ ] Zwraca HTML (`<!DOCTYPE html>`)
 - [ ] **Tabela tłumaczeń renderuje wiersze** (nie jest pusta!)
+- [ ] **[v1.3.1 FIX]** Nagłówek tabeli (wiersz z "Key", nazwami języków) jest przypięty na samej górze tabeli — **NIE** jest przesunięty o kilka wierszy w dół. Przy scrollowaniu header powinien być zawsze widoczny i przyklejony bezpośrednio pod toolbarem.
 - [ ] Zakładki: Translations, Validation, Statistics, Diff — wszystkie działają
 - [ ] Inline editing działa (kliknij komórkę → edytuj → Apply)
 - [ ] Dark mode toggle działa
@@ -231,6 +235,7 @@ kill $WATCH_PID 2>/dev/null
 
 Checklist:
 
+- [ ] **[v1.3.1 FIX]** Serwer startuje bez crashu (w v1.3.0 crashował z `fs is not defined`)
 - [ ] Wypisuje "Watching for .po changes..." na starcie
 - [ ] Po `touch` wypisuje "↻ Reloaded (... changed)"
 - [ ] Serwer dalej działa po przeładowaniu
@@ -248,7 +253,49 @@ Sprawdź które z poniższych występują w projekcie i czy są obsłużone:
 - [ ] Wpisy z flagą `fuzzy` — czy są wykrywane w validate?
 - [ ] Klucze z cudzysłowami lub przecinkami w wartości — czy CSV jest poprawny?
 
-### 10. Anomalie i niestandardowe zachowania
+### 10. Testy regresyjne v1.3.1
+
+> Te testy weryfikują fixy z v1.3.1. Każdy z nich był bugiem w v1.3.0.
+
+**R1. --watch nie crashuje (był: `fs is not defined`)**
+
+Jeśli krok 8b przeszedł — ten test jest zaliczony. Jeśli serwer wyrzucił `ReferenceError: fs is not defined` — regresja.
+
+**R2. Nagłówek tabeli preview nie jest przesunięty**
+
+Otwórz preview w przeglądarce. Przewiń tabelę w dół. Sprawdź czy nagłówek (`Key | en | pl`) jest **przyklejony bezpośrednio pod toolbarem** (search bar), a nie przesunięty o 3-4 wiersze danych.
+
+- [ ] Nagłówek tabeli jest na pozycji 1 (zaraz pod toolbarem)
+- [ ] Przy scrollowaniu nagłówek nie znika i nie "skacze"
+
+**R3. Import nie zmienia nagłówka Plural-Forms**
+
+```bash
+# Sprawdź oryginalny nagłówek Plural-Forms
+grep -A1 "Plural-Forms" "$PO_DIR"/*.po | head -10
+
+# Po round-trip z kroku 4, porównaj:
+grep -A1 "Plural-Forms" /tmp/tt-test-reimport/*.po | head -10
+```
+
+- [ ] Wieloliniowy `Plural-Forms` (jeśli był) zachował continuation lines
+- [ ] Wartość `Plural-Forms` jest identyczna byte-for-byte
+
+**R4. Import nie zmienia pustych linii między wpisami**
+
+```bash
+# Policz puste linie w oryginale vs reimport
+for f in "$PO_DIR"/*.po; do
+  fname=$(basename "$f")
+  orig_blanks=$(grep -c '^$' "$f")
+  new_blanks=$(grep -c '^$' "/tmp/tt-test-reimport/$fname")
+  echo "$fname: original=$orig_blanks reimport=$new_blanks $([ $orig_blanks -eq $new_blanks ] && echo '✅' || echo '❌ DIFFERENT')"
+done
+```
+
+- [ ] Liczba pustych linii identyczna w każdym pliku
+
+### 11. Anomalie i niestandardowe zachowania
 
 **WAŻNE**: Przez cały czas testowania notuj WSZYSTKIE niespodziewane zachowania, nawet jeśli nie są błędami. Anomalie to rzeczy, które Cię zaskoczyły, wymagały dodatkowej interwencji lub mogą być problemem dla innych użytkowników.
 
@@ -272,12 +319,12 @@ Dla każdej anomalii zanotuj:
 3. **Co oczekiwałeś**
 4. **Czy to blocker** (uniemożliwia dalszą pracę) czy tylko irytujące
 
-### 11. RAPORT KOŃCOWY
+### 12. RAPORT KOŃCOWY
 
 Wygeneruj raport **dokładnie** w poniższym formacie:
 
 ```
-## Translation Toolkit v1.3.0 — Test Report
+## Translation Toolkit v1.3.1 — Test Report
 
 **Projekt**: [nazwa projektu]
 **Pliki .po**: X plików, Y języków
@@ -305,6 +352,10 @@ Wygeneruj raport **dokładnie** w poniższym formacie:
 | 11 | Special characters | ✅/❌ | |
 | 12 | Comments preservation | ✅/❌/N/A | |
 | 13 | Edge cases | ✅/❌ | |
+| **R1** | **--watch nie crashuje** | ✅/❌ | v1.3.0 bug: `fs is not defined` |
+| **R2** | **Nagłówek tabeli na pozycji 1** | ✅/❌ | v1.3.0 bug: header na 4. pozycji |
+| **R3** | **Plural-Forms zachowany** | ✅/❌ | v1.3.0 bug: normalizacja do 1 linii |
+| **R4** | **Puste linie zachowane** | ✅/❌ | v1.3.0 bug: dodawanie/usuwanie blank lines |
 
 ### Anomalie
 
