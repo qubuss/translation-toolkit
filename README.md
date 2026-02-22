@@ -23,6 +23,7 @@ A zero-dependency CLI tool to convert between [GNU gettext `.po`](https://www.gn
   - [Diff](#diff-compare-translations)
 - [Auto-Discovery](#auto-discovery)
 - [CSV Format](#csv-format)
+- [CI/CD Integration](#cicd-integration)
 - [Examples](#examples)
 - [Typical Workflow](#typical-workflow)
 - [Limitations](#limitations)
@@ -295,6 +296,42 @@ When `--dir` is not specified, the tool recursively searches the current working
 - Fields containing the delimiter, `"`, or newlines are wrapped in double quotes
 - Double quotes inside fields are escaped as `""`
 
+## CI/CD Integration
+
+Use the `--ci` flag for non-interactive mode. This prevents the tool from prompting when multiple `.po` directories are found — it auto-selects the first one instead.
+
+```bash
+# All commands support --ci
+translation-toolkit validate --ci
+translation-toolkit export --ci -o translations.csv
+translation-toolkit import translations.csv --ci --dry-run
+```
+
+**Tip:** Always pass `--dir` explicitly in CI to avoid auto-discovery:
+
+```bash
+translation-toolkit validate --dir src/i18n
+```
+
+### GitHub Actions example
+
+```yaml
+name: Validate Translations
+on: [push, pull_request]
+
+jobs:
+  translations:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install -g translation-toolkit
+      - run: translation-toolkit validate --dir src/i18n --ci
+      - run: translation-toolkit stats --dir src/i18n --ci
+```
+
 ## Examples
 
 ```bash
@@ -371,7 +408,8 @@ git diff src/translations/
 | ----- | --------------------------------------------------------- | ------- |
 | 1     | Core CLI (export, import, preview, validate, stats, diff) | ✅ Done |
 | 1.3   | DX improvements (dry-run, watch mode, port auto-detect)   | ✅ Done |
-| 1.4   | Static preview export (`--static`) for GitHub Pages       | 🔜 Next |
+| 1.4   | CI/CD mode (`--ci` flag, non-interactive, exit codes)     | ✅ Done |
+| 1.5   | Static preview export (`--static`) for GitHub Pages       | 🔜 Next |
 | 2     | Plural forms (`msgid_plural` / `msgstr[N]`)               | Planned |
 | 3     | Additional formats: JSON, XLIFF, Android XML              | Planned |
 | 4     | Custom validation rules                                   | Planned |

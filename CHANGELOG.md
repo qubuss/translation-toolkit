@@ -3,6 +3,18 @@
 All notable changes to **translation-toolkit** are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.3.2] — 2026-02-22
+
+### Added
+
+- **`--ci` flag** — non-interactive mode for CI/CD pipelines; auto-selects the first `.po` directory when multiple are found instead of prompting on stdin (all commands)
+- **`--help` improvements** — documented pipe-separated format, `--ci` flag, exit codes, and `-D` delimiter override
+- **CI/CD section in README** — GitHub Actions example, best practices for `--ci` and `--dir`
+
+### Fixed
+
+- **Preview: table header row STILL at 4th position** — root cause was `overflow: hidden` on `<table>` creating a new CSS scroll container, making `position: sticky` resolve relative to the table instead of the viewport. Removed `overflow: hidden`, switched to `border-collapse: separate` with `border-spacing: 0`, added corner cell border-radius for visual parity
+
 ## [1.3.1] — 2026-02-20
 
 ### Fixed
@@ -65,6 +77,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Zero runtime dependencies
 - 31 tests across 12 suites
 
+[1.3.2]: https://github.com/qubuss/translation-toolkit/compare/v1.3.1...v1.3.2
+[1.3.1]: https://github.com/qubuss/translation-toolkit/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/qubuss/translation-toolkit/compare/v1.2.1...v1.3.0
 [1.2.1]: https://github.com/qubuss/translation-toolkit/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/qubuss/translation-toolkit/compare/v1.1.0...v1.2.0

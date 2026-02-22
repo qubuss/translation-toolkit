@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 
 /**
- * translation-toolkit — CLI for managing .po translation files.
+ * po-csv-tool — CLI for converting between .po translation files and CSV.
  *
  * Usage:
- *   translation-toolkit export [options]
- *   translation-toolkit import <file.csv> [options]
- *   translation-toolkit --help
+ *   po-csv-tool export [options]
+ *   po-csv-tool import <file.csv> [options]
+ *   po-csv-tool --help
  */
 
 const { runExport } = require('../lib/export');
@@ -20,16 +20,16 @@ const VERSION = require('../package.json').version;
 
 function printHelp() {
   console.log(`
-translation-toolkit v${VERSION}
-Zero-dependency CLI toolkit for managing .po translation files.
+po-csv-tool v${VERSION}
+Convert between .po translation files and pipe-delimited CSV.
 
 USAGE
-  translation-toolkit export [options]        Export .po files → CSV
-  translation-toolkit import <file> [options] Import CSV → .po files
-  translation-toolkit preview [options]       Preview translations in browser
-  translation-toolkit validate [options]      Validate translations for issues
-  translation-toolkit stats [options]         Show translation coverage statistics
-  translation-toolkit diff <file> [file] [opt] Compare translations (CSV vs CSV or CSV vs .po)
+  po-csv-tool export [options]        Export .po files → CSV
+  po-csv-tool import <file> [options] Import CSV → .po files
+  po-csv-tool preview [options]       Preview translations in browser
+  po-csv-tool validate [options]      Validate translations for issues
+  po-csv-tool stats [options]         Show translation coverage statistics
+  po-csv-tool diff <file> [file] [opt] Compare translations (CSV vs CSV or CSV vs .po)
 
 EXPORT OPTIONS
   -o, --output <file>   Output CSV file path (default: translations.csv)
@@ -38,14 +38,12 @@ EXPORT OPTIONS
 
 IMPORT OPTIONS
   -m, --merge           Keep existing keys not in CSV (default: replace all)
-  -n, --dry-run         Show what would change without modifying any files
   -d, --dir <path>      Translations directory (default: auto-discover)
   -D, --delimiter <ch>  Column delimiter (default: |)
 
 PREVIEW OPTIONS
   -d, --dir <path>      Translations directory (default: auto-discover)
-  -p, --port <number>   HTTP server port (default: 3456, auto-increments if busy)
-  -w, --watch           Auto-reload when .po files change
+  -p, --port <number>   HTTP server port (default: 3456)
 
 VALIDATE OPTIONS
   -d, --dir <path>      Translations directory (default: auto-discover)
@@ -72,21 +70,20 @@ EXIT CODES
   1                     Error, or: differences found (diff), validation errors (validate)
 
 EXAMPLES
-  translation-toolkit export
-  translation-toolkit export -o translations.csv -d src/i18n
-  translation-toolkit import translations.csv
-  translation-toolkit import translations.csv --merge
-  translation-toolkit import translations.csv --dry-run
-  translation-toolkit import translations.csv -d locales/
-  translation-toolkit preview
-  translation-toolkit preview --port 8080 --watch
-  translation-toolkit validate
-  translation-toolkit validate --dir src/i18n
-  translation-toolkit stats
-  translation-toolkit stats --dir src/i18n
-  translation-toolkit diff old.csv new.csv
-  translation-toolkit diff translations.csv
-  translation-toolkit diff translations.csv --dir src/i18n
+  po-csv-tool export
+  po-csv-tool export -o translations.csv -d src/i18n
+  po-csv-tool import translations.csv
+  po-csv-tool import translations.csv --merge
+  po-csv-tool import translations.csv -d locales/
+  po-csv-tool preview
+  po-csv-tool preview --port 8080
+  po-csv-tool validate
+  po-csv-tool validate --dir src/i18n
+  po-csv-tool stats
+  po-csv-tool stats --dir src/i18n
+  po-csv-tool diff old.csv new.csv
+  po-csv-tool diff translations.csv
+  po-csv-tool diff translations.csv --dir src/i18n
 
 AUTO-DISCOVERY
   When --dir is not specified, the tool recursively searches the current
