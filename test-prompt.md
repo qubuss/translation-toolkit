@@ -6,7 +6,7 @@ Wklej poniższy prompt w czacie nowego projektu (który ma pliki .po):
 
 ## PROMPT START
 
-Zainstaluj i przetestuj narzędzie `translation-toolkit@1.3.1` (npm) na tym projekcie.
+Zainstaluj i przetestuj narzędzie `translation-toolkit@1.3.2` (npm) na tym projekcie.
 Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj raport.
 
 > Komendy: `export`, `import`, `preview`, `validate`, `stats`, `diff`
@@ -14,8 +14,8 @@ Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj 
 ### 0. Instalacja
 
 ```bash
-npm install -g translation-toolkit@1.3.1
-translation-toolkit --version   # powinno wypisać 1.3.1
+npm install -g translation-toolkit@1.3.2
+translation-toolkit --version   # powinno wypisać 1.3.2
 ```
 
 ### 1. Odkrywanie plików .po
@@ -113,6 +113,7 @@ Checklist:
 - [ ] **[v1.3.1 FIX]** Nagłówek `Plural-Forms` wieloliniowy (continuation line) zachował oryginalny podział linii (nie został znormalizowany do jednej linii)
 - [ ] **[v1.3.1 FIX]** Puste linie między wpisami zachowały oryginalny wzorzec (nie zostały dodane/usunięte)
 - [ ] **[v1.3.1 FIX]** Komentarze (`#.`, `#:`, `#,`) zachowane byte-for-byte
+- [ ] **[v1.3.2 FIX]** Tagi `--ci` w `--help` są widoczne (`translation-toolkit --help | grep ci`)
 
 ### 5. Test VALIDATE
 
@@ -194,7 +195,7 @@ Checklist:
 - [ ] Serwer startuje bez błędów
 - [ ] Zwraca HTML (`<!DOCTYPE html>`)
 - [ ] **Tabela tłumaczeń renderuje wiersze** (nie jest pusta!)
-- [ ] **[v1.3.1 FIX]** Nagłówek tabeli (wiersz z "Key", nazwami języków) jest przypięty na samej górze tabeli — **NIE** jest przesunięty o kilka wierszy w dół. Przy scrollowaniu header powinien być zawsze widoczny i przyklejony bezpośrednio pod toolbarem.
+- [ ] **[v1.3.2 FIX]** Nagłówek tabeli (wiersz z "Key", nazwami języków) jest przypięty na samej górze tabeli — **NIE** jest przesunięty o kilka wierszy w dół. Przy scrollowaniu header powinien być zawsze widoczny i przyklejony bezpośrednio pod toolbarem.
 - [ ] Zakładki: Translations, Validation, Statistics, Diff — wszystkie działają
 - [ ] Inline editing działa (kliknij komórkę → edytuj → Apply)
 - [ ] Dark mode toggle działa
@@ -236,6 +237,7 @@ kill $WATCH_PID 2>/dev/null
 Checklist:
 
 - [ ] **[v1.3.1 FIX]** Serwer startuje bez crashu (w v1.3.0 crashował z `fs is not defined`)
+- [ ] **[v1.3.2 NEW]** Flaga `--ci` działa: `translation-toolkit preview --dir "$PO_DIR" --port 3459 --ci &` → auto-wybiera katalog bez pytania
 - [ ] Wypisuje "Watching for .po changes..." na starcie
 - [ ] Po `touch` wypisuje "↻ Reloaded (... changed)"
 - [ ] Serwer dalej działa po przeładowaniu
@@ -253,17 +255,19 @@ Sprawdź które z poniższych występują w projekcie i czy są obsłużone:
 - [ ] Wpisy z flagą `fuzzy` — czy są wykrywane w validate?
 - [ ] Klucze z cudzysłowami lub przecinkami w wartości — czy CSV jest poprawny?
 
-### 10. Testy regresyjne v1.3.1
+### 10. Testy regresyjne v1.3.2
 
-> Te testy weryfikują fixy z v1.3.1. Każdy z nich był bugiem w v1.3.0.
+> Te testy weryfikują fixy z v1.3.1 i v1.3.2.
 
 **R1. --watch nie crashuje (był: `fs is not defined`)**
 
 Jeśli krok 8b przeszedł — ten test jest zaliczony. Jeśli serwer wyrzucił `ReferenceError: fs is not defined` — regresja.
 
-**R2. Nagłówek tabeli preview nie jest przesunięty**
+**R2. Nagłówek tabeli preview nie jest przesunięty [v1.3.2 FIX]**
 
 Otwórz preview w przeglądarce. Przewiń tabelę w dół. Sprawdź czy nagłówek (`Key | en | pl`) jest **przyklejony bezpośrednio pod toolbarem** (search bar), a nie przesunięty o 3-4 wiersze danych.
+
+> Root cause w v1.3.0–v1.3.1: `overflow: hidden` na `<table>` tworzył nowy CSS scroll container, przez co `position: sticky` nie działał względem viewportu. Fix w v1.3.2: usunięto `overflow: hidden`, zmieniono `border-collapse: collapse` → `border-collapse: separate; border-spacing: 0`.
 
 - [ ] Nagłówek tabeli jest na pozycji 1 (zaraz pod toolbarem)
 - [ ] Przy scrollowaniu nagłówek nie znika i nie "skacze"
@@ -295,6 +299,19 @@ done
 
 - [ ] Liczba pustych linii identyczna w każdym pliku
 
+**R5. Flaga --ci auto-wybiera katalog [v1.3.2 NEW]**
+
+Jeśli projekt ma wiele katalogów z `.po` (lub nawet jeden):
+
+```bash
+translation-toolkit export --dir "$PO_DIR" -o /tmp/tt-ci-test.csv --ci
+echo "Exit: $?"
+```
+
+- [ ] Komenda nie pyta o wybór katalogu (auto-wybiera pierwszy)
+- [ ] Wypisuje "CI mode: ..." jeśli znaleziono wiele katalogów
+- [ ] Exit code 0
+
 ### 11. Anomalie i niestandardowe zachowania
 
 **WAŻNE**: Przez cały czas testowania notuj WSZYSTKIE niespodziewane zachowania, nawet jeśli nie są błędami. Anomalie to rzeczy, które Cię zaskoczyły, wymagały dodatkowej interwencji lub mogą być problemem dla innych użytkowników.
@@ -324,7 +341,7 @@ Dla każdej anomalii zanotuj:
 Wygeneruj raport **dokładnie** w poniższym formacie:
 
 ```
-## Translation Toolkit v1.3.1 — Test Report
+## Translation Toolkit v1.3.2 — Test Report
 
 **Projekt**: [nazwa projektu]
 **Pliki .po**: X plików, Y języków
@@ -356,6 +373,7 @@ Wygeneruj raport **dokładnie** w poniższym formacie:
 | **R2** | **Nagłówek tabeli na pozycji 1** | ✅/❌ | v1.3.0 bug: header na 4. pozycji |
 | **R3** | **Plural-Forms zachowany** | ✅/❌ | v1.3.0 bug: normalizacja do 1 linii |
 | **R4** | **Puste linie zachowane** | ✅/❌ | v1.3.0 bug: dodawanie/usuwanie blank lines |
+| **R5** | **--ci auto-wybiera katalog** | ✅/❌ | v1.3.2 new: nie pyta o wybór |
 
 ### Anomalie
 
