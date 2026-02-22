@@ -44,6 +44,8 @@ IMPORT OPTIONS
 PREVIEW OPTIONS
   -d, --dir <path>      Translations directory (default: auto-discover)
   -p, --port <number>   HTTP server port (default: 3456)
+  -s, --static          Generate standalone HTML file (no server needed)
+  -o, --output <path>   Output file for --static (default: translation-preview.html)
 
 VALIDATE OPTIONS
   -d, --dir <path>      Translations directory (default: auto-discover)
@@ -77,6 +79,8 @@ EXAMPLES
   po-csv-tool import translations.csv -d locales/
   po-csv-tool preview
   po-csv-tool preview --port 8080
+  po-csv-tool preview --static
+  po-csv-tool preview --static -o docs/preview.html
   po-csv-tool validate
   po-csv-tool validate --dir src/i18n
   po-csv-tool stats

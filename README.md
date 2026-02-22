@@ -39,6 +39,7 @@ A zero-dependency CLI tool to convert between [GNU gettext `.po`](https://www.gn
 - **Merge mode** — update only changed keys without removing existing ones
 - **Custom delimiter** — use `|`, `;`, `\t`, or any character
 - **Browser preview** — view all translations in a searchable table at `localhost`
+- **Static export** — generate a standalone HTML preview file for GitHub Pages / S3 / email
 - **Inline editing** — click any cell in the preview to edit translations directly in the browser
 - **Validation** — check for missing keys, empty translations, variable mismatches
 - **Statistics** — per-language coverage reports with progress bars
@@ -163,11 +164,13 @@ View all translations in an interactive table in your browser.
 translation-toolkit preview [options]
 ```
 
-| Option                | Description                       | Default       |
-| --------------------- | --------------------------------- | ------------- |
-| `-d, --dir <path>`    | Translations directory            | auto-discover |
-| `-p, --port <number>` | HTTP server port                  | `3456`        |
-| `-w, --watch`         | Auto-reload on `.po` file changes | off           |
+| Option                | Description                                 | Default                    |
+| --------------------- | ------------------------------------------- | -------------------------- |
+| `-d, --dir <path>`    | Translations directory                      | auto-discover              |
+| `-p, --port <number>` | HTTP server port                            | `3456`                     |
+| `-w, --watch`         | Auto-reload on `.po` file changes           | off                        |
+| `-s, --static`        | Generate a standalone HTML file (no server) | off                        |
+| `-o, --output <path>` | Output file path (with `--static`)          | `translation-preview.html` |
 
 If the requested port is in use, the server automatically tries the next port (up to 20 attempts).
 
@@ -185,6 +188,7 @@ Features of the preview page:
 - **Dark mode** — toggle via the 🌙 button in the header (remembers your preference)
 - **Save bar** — floating bar shows unsaved changes count with Save/Discard buttons
 - **Watch mode** — `--watch` auto-reloads data when `.po` files change on disk (refresh browser to see updates)
+- **Static export** — `--static` generates a self-contained HTML file with all data embedded (read-only, no server needed)
 
 ![Translations tab](docs/screenshots/translations_screen.png)
 
@@ -332,6 +336,33 @@ jobs:
       - run: translation-toolkit stats --dir src/i18n --ci
 ```
 
+### Deploy static preview to GitHub Pages
+
+Generate a standalone HTML preview and publish it as a build artifact or deploy to GitHub Pages:
+
+```yaml
+name: Translation Preview
+on:
+  push:
+    branches: [main]
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install -g translation-toolkit
+      - run: translation-toolkit preview --dir src/i18n --static -o docs/preview.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/
+```
+
+The generated file is fully self-contained — all data, styles, and scripts are embedded in a single HTML file. No server or additional assets required.
+
 ## Examples
 
 ```bash
@@ -356,6 +387,10 @@ npx translation-toolkit export
 translation-toolkit preview
 translation-toolkit preview --port 8080
 translation-toolkit preview --watch
+
+# Generate standalone HTML preview (for GitHub Pages, S3, email)
+translation-toolkit preview --static
+translation-toolkit preview --static -o docs/preview.html
 
 # Validate translations (CI-friendly)
 translation-toolkit validate
@@ -409,7 +444,7 @@ git diff src/translations/
 | 1     | Core CLI (export, import, preview, validate, stats, diff) | ✅ Done |
 | 1.3   | DX improvements (dry-run, watch mode, port auto-detect)   | ✅ Done |
 | 1.4   | CI/CD mode (`--ci` flag, non-interactive, exit codes)     | ✅ Done |
-| 1.5   | Static preview export (`--static`) for GitHub Pages       | 🔜 Next |
+| 1.5   | Static preview export (`--static`) for GitHub Pages       | ✅ Done |
 | 2     | Plural forms (`msgid_plural` / `msgstr[N]`)               | Planned |
 | 3     | Additional formats: JSON, XLIFF, Android XML              | Planned |
 | 4     | Custom validation rules                                   | Planned |

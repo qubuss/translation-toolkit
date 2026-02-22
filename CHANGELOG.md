@@ -3,6 +3,26 @@
 All notable changes to **translation-toolkit** are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.4.0] — 2026-02-22
+
+### Added
+
+- **`--static` / `-s` flag for `preview`** — generates a standalone, self-contained HTML file with all translations, validation, statistics, and diff functionality embedded. No server required — open directly in a browser or deploy to GitHub Pages / S3.
+- **`--output` / `-o` flag for `preview`** — specify the output file path when using `--static` (default: `translation-preview.html`)
+- **Client-side diff in static previews** — the Diff tab works fully offline with a built-in CSV parser and diff engine running in the browser
+- **Static footer** — static previews show a generation timestamp and tool version in the footer
+- **GitHub Pages deployment example** in README — CI/CD workflow for generating and publishing static previews
+
+### Changed
+
+- `buildHtml()` and `generateStaticPreview()` now exported from `lib/preview.js` for testability
+- `--watch` + `--static` combination is rejected with a clear error message
+- Inline editing and save functionality are gracefully disabled in static mode (read-only)
+
+### Tests
+
+- 91 tests across 20 suites (added 20 preview/static tests in 4 new suites)
+
 ## [1.3.2] — 2026-02-22
 
 ### Added

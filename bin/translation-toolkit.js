@@ -46,6 +46,8 @@ PREVIEW OPTIONS
   -d, --dir <path>      Translations directory (default: auto-discover)
   -p, --port <number>   HTTP server port (default: 3456, auto-increments if busy)
   -w, --watch           Auto-reload when .po files change
+  -s, --static          Generate standalone HTML file (no server needed)
+  -o, --output <path>   Output file for --static (default: translation-preview.html)
 
 VALIDATE OPTIONS
   -d, --dir <path>      Translations directory (default: auto-discover)
@@ -80,6 +82,8 @@ EXAMPLES
   translation-toolkit import translations.csv -d locales/
   translation-toolkit preview
   translation-toolkit preview --port 8080 --watch
+  translation-toolkit preview --static
+  translation-toolkit preview --static -o docs/preview.html
   translation-toolkit validate
   translation-toolkit validate --dir src/i18n
   translation-toolkit stats

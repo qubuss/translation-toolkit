@@ -6,7 +6,7 @@ Wklej poniższy prompt w czacie nowego projektu (który ma pliki .po):
 
 ## PROMPT START
 
-Zainstaluj i przetestuj narzędzie `translation-toolkit@1.3.2` (npm) na tym projekcie.
+Zainstaluj i przetestuj narzędzie `translation-toolkit@1.4.0` (npm) na tym projekcie.
 Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj raport.
 
 > Komendy: `export`, `import`, `preview`, `validate`, `stats`, `diff`
@@ -14,8 +14,8 @@ Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj 
 ### 0. Instalacja
 
 ```bash
-npm install -g translation-toolkit@1.3.2
-translation-toolkit --version   # powinno wypisać 1.3.2
+npm install -g translation-toolkit@1.4.0
+translation-toolkit --version   # powinno wypisać 1.4.0
 ```
 
 ### 1. Odkrywanie plików .po
@@ -62,9 +62,11 @@ Checklist:
 ### 3. Test IMPORT --dry-run
 
 ```bash
-# Dodaj nowy klucz do CSV
+# Dodaj nowy klucz do CSV (dynamicznie dopasowuje liczbę kolumn)
 cp /tmp/tt-test-export.csv /tmp/tt-test-dryrun.csv
-echo '"DRYRUN_KEY","dry en","dry pl"' >> /tmp/tt-test-dryrun.csv
+COLS=$(head -1 /tmp/tt-test-dryrun.csv | awk -F',' '{print NF}')
+ROW='"DRYRUN_KEY"'; for i in $(seq 2 $COLS); do ROW="$ROW,\"dry lang $((i-1))\""; done
+echo "$ROW" >> /tmp/tt-test-dryrun.csv
 
 translation-toolkit import /tmp/tt-test-dryrun.csv --dir "$PO_DIR" --dry-run
 ```
@@ -113,7 +115,7 @@ Checklist:
 - [ ] **[v1.3.1 FIX]** Nagłówek `Plural-Forms` wieloliniowy (continuation line) zachował oryginalny podział linii (nie został znormalizowany do jednej linii)
 - [ ] **[v1.3.1 FIX]** Puste linie między wpisami zachowały oryginalny wzorzec (nie zostały dodane/usunięte)
 - [ ] **[v1.3.1 FIX]** Komentarze (`#.`, `#:`, `#,`) zachowane byte-for-byte
-- [ ] **[v1.3.2 FIX]** Tagi `--ci` w `--help` są widoczne (`translation-toolkit --help | grep ci`)
+- [ ] **[v1.4.0 FIX]** Tagi `--ci` w `--help` są widoczne (`translation-toolkit --help | grep ci`)
 
 ### 5. Test VALIDATE
 
@@ -156,8 +158,10 @@ sed -i  '3s/,[^,]*$/,ZMIENIONE/' /tmp/tt-test-modified.csv
 # 2) Usuń wiersz 5 (symulacja usunięcia klucza)
 sed -i '' '5d' /tmp/tt-test-modified.csv 2>/dev/null || \
 sed -i  '5d' /tmp/tt-test-modified.csv
-# 3) Dodaj nowy klucz na końcu
-echo '"NEW_TEST_KEY","new value en","nowa wartość pl"' >> /tmp/tt-test-modified.csv
+# 3) Dodaj nowy klucz na końcu (dynamicznie dopasowuje liczbę kolumn)
+COLS=$(head -1 /tmp/tt-test-modified.csv | awk -F',' '{print NF}')
+NEW_ROW='"NEW_TEST_KEY"'; for i in $(seq 2 $COLS); do NEW_ROW="$NEW_ROW,\"new val $((i-1))\""; done
+echo "$NEW_ROW" >> /tmp/tt-test-modified.csv
 
 translation-toolkit diff /tmp/tt-test-export.csv /tmp/tt-test-modified.csv
 ```
@@ -195,7 +199,7 @@ Checklist:
 - [ ] Serwer startuje bez błędów
 - [ ] Zwraca HTML (`<!DOCTYPE html>`)
 - [ ] **Tabela tłumaczeń renderuje wiersze** (nie jest pusta!)
-- [ ] **[v1.3.2 FIX]** Nagłówek tabeli (wiersz z "Key", nazwami języków) jest przypięty na samej górze tabeli — **NIE** jest przesunięty o kilka wierszy w dół. Przy scrollowaniu header powinien być zawsze widoczny i przyklejony bezpośrednio pod toolbarem.
+- [ ] **[v1.4.0 FIX]** Nagłówek tabeli (wiersz z "Key", nazwami języków) jest przypięty na samej górze tabeli — **NIE** jest przesunięty o kilka wierszy w dół. Przy scrollowaniu header powinien być zawsze widoczny i przyklejony bezpośrednio pod toolbarem.
 - [ ] Zakładki: Translations, Validation, Statistics, Diff — wszystkie działają
 - [ ] Inline editing działa (kliknij komórkę → edytuj → Apply)
 - [ ] Dark mode toggle działa
@@ -237,10 +241,56 @@ kill $WATCH_PID 2>/dev/null
 Checklist:
 
 - [ ] **[v1.3.1 FIX]** Serwer startuje bez crashu (w v1.3.0 crashował z `fs is not defined`)
-- [ ] **[v1.3.2 NEW]** Flaga `--ci` działa: `translation-toolkit preview --dir "$PO_DIR" --port 3459 --ci &` → auto-wybiera katalog bez pytania
+- [ ] **[v1.4.0 NEW]** Flaga `--ci` działa: `translation-toolkit preview --dir "$PO_DIR" --port 3459 --ci &` → auto-wybiera katalog bez pytania
 - [ ] Wypisuje "Watching for .po changes..." na starcie
 - [ ] Po `touch` wypisuje "↻ Reloaded (... changed)"
 - [ ] Serwer dalej działa po przeładowaniu
+
+**8c. Test --static (standalone HTML export) [v1.4.0 NEW]:**
+
+```bash
+translation-toolkit preview --dir "$PO_DIR" --static
+ls -la translation-preview.html
+```
+
+Checklist:
+
+- [ ] Generuje plik `translation-preview.html` bez błędów
+- [ ] Plik zawiera `STATIC_MODE = true`
+- [ ] Wszystkie dane tłumaczeń osadzone w HTML
+- [ ] Tabela, walidacja, statystyki, diff — wszystkie zakładki obecne
+
+**Test custom output path:**
+
+```bash
+translation-toolkit preview --dir "$PO_DIR" --static -o /tmp/tt-static-preview.html
+ls -la /tmp/tt-static-preview.html
+```
+
+- [ ] Plik utworzony pod wskazaną ścieżką
+- [ ] Rozmiar > 1 KB
+
+**Test --static + --watch rejection:**
+
+```bash
+translation-toolkit preview --dir "$PO_DIR" --static --watch 2>&1
+echo "Exit: $?"
+```
+
+- [ ] Wypisuje błąd "Error: --watch cannot be used with --static"
+- [ ] Exit code != 0
+
+**Test --static with empty dir:**
+
+```bash
+mkdir -p /tmp/tt-empty-dir
+translation-toolkit preview --dir /tmp/tt-empty-dir --static 2>&1
+echo "Exit: $?"
+rm -rf /tmp/tt-empty-dir
+```
+
+- [ ] Wypisuje błąd o braku plików .po
+- [ ] Exit code != 0
 
 ### 9. Edge cases
 
@@ -255,19 +305,19 @@ Sprawdź które z poniższych występują w projekcie i czy są obsłużone:
 - [ ] Wpisy z flagą `fuzzy` — czy są wykrywane w validate?
 - [ ] Klucze z cudzysłowami lub przecinkami w wartości — czy CSV jest poprawny?
 
-### 10. Testy regresyjne v1.3.2
+### 10. Testy regresyjne v1.4.0
 
-> Te testy weryfikują fixy z v1.3.1 i v1.3.2.
+> Te testy weryfikują fixy z v1.3.1 i v1.4.0.
 
 **R1. --watch nie crashuje (był: `fs is not defined`)**
 
 Jeśli krok 8b przeszedł — ten test jest zaliczony. Jeśli serwer wyrzucił `ReferenceError: fs is not defined` — regresja.
 
-**R2. Nagłówek tabeli preview nie jest przesunięty [v1.3.2 FIX]**
+**R2. Nagłówek tabeli preview nie jest przesunięty [v1.4.0 FIX]**
 
 Otwórz preview w przeglądarce. Przewiń tabelę w dół. Sprawdź czy nagłówek (`Key | en | pl`) jest **przyklejony bezpośrednio pod toolbarem** (search bar), a nie przesunięty o 3-4 wiersze danych.
 
-> Root cause w v1.3.0–v1.3.1: `overflow: hidden` na `<table>` tworzył nowy CSS scroll container, przez co `position: sticky` nie działał względem viewportu. Fix w v1.3.2: usunięto `overflow: hidden`, zmieniono `border-collapse: collapse` → `border-collapse: separate; border-spacing: 0`.
+> Root cause w v1.3.0–v1.3.1: `overflow: hidden` na `<table>` tworzył nowy CSS scroll container, przez co `position: sticky` nie działał względem viewportu. Fix w v1.4.0: usunięto `overflow: hidden`, zmieniono `border-collapse: collapse` → `border-collapse: separate; border-spacing: 0`.
 
 - [ ] Nagłówek tabeli jest na pozycji 1 (zaraz pod toolbarem)
 - [ ] Przy scrollowaniu nagłówek nie znika i nie "skacze"
@@ -299,7 +349,7 @@ done
 
 - [ ] Liczba pustych linii identyczna w każdym pliku
 
-**R5. Flaga --ci auto-wybiera katalog [v1.3.2 NEW]**
+**R5. Flaga --ci auto-wybiera katalog [v1.4.0 NEW]**
 
 Jeśli projekt ma wiele katalogów z `.po` (lub nawet jeden):
 
@@ -311,6 +361,22 @@ echo "Exit: $?"
 - [ ] Komenda nie pyta o wybór katalogu (auto-wybiera pierwszy)
 - [ ] Wypisuje "CI mode: ..." jeśli znaleziono wiele katalogów
 - [ ] Exit code 0
+
+**R6. --static generuje standalone HTML [v1.4.0 NEW]**
+
+```bash
+translation-toolkit preview --dir "$PO_DIR" --static -o /tmp/tt-static-test.html
+# Sprawdź zawartość
+grep -c "STATIC_MODE = true" /tmp/tt-static-test.html
+grep -c "parseCsvString" /tmp/tt-static-test.html
+grep -c "clientDiff" /tmp/tt-static-test.html
+```
+
+- [ ] Plik HTML zawiera `STATIC_MODE = true`
+- [ ] Plik zawiera client-side CSV parser (`parseCsvString`)
+- [ ] Plik zawiera client-side diff (`clientDiff`)
+- [ ] Inline editing jest zablokowany (guard `if (STATIC_MODE) return`)
+- [ ] Save bar ma `display:none`
 
 ### 11. Anomalie i niestandardowe zachowania
 
@@ -341,7 +407,7 @@ Dla każdej anomalii zanotuj:
 Wygeneruj raport **dokładnie** w poniższym formacie:
 
 ```
-## Translation Toolkit v1.3.2 — Test Report
+## Translation Toolkit v1.4.0 — Test Report
 
 **Projekt**: [nazwa projektu]
 **Pliki .po**: X plików, Y języków
@@ -369,11 +435,15 @@ Wygeneruj raport **dokładnie** w poniższym formacie:
 | 11 | Special characters | ✅/❌ | |
 | 12 | Comments preservation | ✅/❌/N/A | |
 | 13 | Edge cases | ✅/❌ | |
+| 14 | --static HTML export | ✅/❌ | standalone HTML generated? |
+| 15 | --static custom output | ✅/❌ | -o flag works? |
+| 16 | --static + --watch rejection | ✅/❌ | error message shown? |
 | **R1** | **--watch nie crashuje** | ✅/❌ | v1.3.0 bug: `fs is not defined` |
 | **R2** | **Nagłówek tabeli na pozycji 1** | ✅/❌ | v1.3.0 bug: header na 4. pozycji |
 | **R3** | **Plural-Forms zachowany** | ✅/❌ | v1.3.0 bug: normalizacja do 1 linii |
 | **R4** | **Puste linie zachowane** | ✅/❌ | v1.3.0 bug: dodawanie/usuwanie blank lines |
-| **R5** | **--ci auto-wybiera katalog** | ✅/❌ | v1.3.2 new: nie pyta o wybór |
+| **R5** | **--ci auto-wybiera katalog** | ✅/❌ | v1.4.0 new: nie pyta o wybór |
+| **R6** | **--static standalone HTML** | ✅/❌ | v1.4.0 new: client-side diff, no server |
 
 ### Anomalie
 
