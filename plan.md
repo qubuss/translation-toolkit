@@ -1,20 +1,22 @@
 # translation-toolkit — Plan rozwoju
 
-## Status: ZATWIERDZONY
+## Status: AKTYWNY — v1.4.0 wydane, v1.4.1 w planach
 
-**Strategia:** Najpierw solidne fundamenty (multiline, msgctxt, testy), publikacja v1.1 po Fazie 1, potem plural forms (v1.2), a na końcu rozszerzenie o JSON/i18next (v2.0). Każda faza kończy się publikacją na npm.
+**Strategia:** Iteracyjne wydania — solidne fundamenty (Faza 1 ✅), polish & DX (v1.2–v1.4 ✅), potem plural forms (Faza 2), a na końcu rozszerzenie o JSON/i18next (Faza 3). Każda faza kończy się publikacją na npm.
 
-**Nazwa paczki:** `translation-toolkit` ✅ (zatwierdzona)
+**Nazwa paczki:** `translation-toolkit` ✅ (opublikowana na npm)
+**Repozytorium:** https://github.com/qubuss/translation-toolkit
+**Zero dependencies** — kluczowy wyróżnik
 
 ---
 
 ## 1. Nazwa paczki
 
-### Decyzja: kierunek `*-toolkit`
+### Decyzja: `translation-toolkit` ✅ OPUBLIKOWANA
 
 | Nazwa                     | Dostępna na npm | Uwagi                                                                  |
 | ------------------------- | :-------------: | ---------------------------------------------------------------------- |
-| **`translation-toolkit`** |       ✅        | Szeroka, profesjonalna, pasuje do multi-format przyszłości             |
+| **`translation-toolkit`** |    ✅ nasza     | Szeroka, profesjonalna, pasuje do multi-format przyszłości             |
 | **`translate-toolkit`**   |       ✅        | Krótsza, ale uwaga: Python `translate-toolkit` jest znany (może mylić) |
 | **`l10n-toolkit`**        |       ✅        | Techniczna, niszowa — trafia do ludzi znających l10n                   |
 | **`translation-tools`**   |       ✅        | Prosta, ale mniej "markowa"                                            |
@@ -27,23 +29,21 @@
 - Pasuje do przyszłego rozszerzenia o JSON/i18next (Faza 3)
 - Dobrze wygląda: `npx translation-toolkit export`, `npx translation-toolkit validate`
 - Nie koliduje z Python translate-toolkit (inna nazwa)
-- Wolna na npm (sprawdzone 20.02.2026)
+- Opublikowana na npm 20.02.2026
 
 ---
 
-## 2. Roadmapa — trzy fazy
+## 2. Roadmapa
 
 ---
 
-### Faza 1 — Solidne fundamenty (v1.1) 📦 PUBLIKACJA PO TEJ FAZIE
+### Faza 1 — Solidne fundamenty (v1.0–v1.1) ✅ UKOŃCZONA
 
-Cel: paczka działa poprawnie z realnymi plikami .po "z życia". Bez tego nie warto publikować.
+Cel: paczka działa poprawnie z realnymi plikami .po "z życia".
 
-#### 1.1 Wsparcie dla multi-line strings
+#### 1.1 Wsparcie dla multi-line strings ✅
 
-**Priorytet: WYSOKI** | **Szacunek: 0.5-1 dzień**
-
-Problem: Wiele plików .po używa kontynuacji stringów:
+**Ukończone w v1.0**
 
 ```po
 msgid ""
@@ -51,71 +51,140 @@ msgid ""
 "continues on the next line."
 ```
 
-Co zrobić:
+- [x] Parser łączy linie kontynuacji w jeden string
+- [x] Przy kompilacji do .po — zachowanie oryginalnego podziału linii
+- [x] Testy na plikach z multi-line strings
 
-- [ ] Parser łączy linie kontynuacji w jeden string
-- [ ] Przy kompilacji do .po — zawijanie co ~76 znaków (standard gettext)
-- [ ] Testy na plikach z multi-line strings
+#### 1.2 Wsparcie dla `msgctxt` (kontekst wiadomości) ✅
 
-Pliki do zmiany: `lib/poParser.js`
+**Ukończone w v1.0**
 
-#### 1.2 Wsparcie dla `msgctxt` (kontekst wiadomości)
+- [x] Parser rozpoznaje `msgctxt` w .po
+- [x] W CSV key = `kontekst::klucz` (separator `::`)
+- [x] Import odtwarza `msgctxt` z klucza CSV
+- [x] Preview i Validate uwzględniają kontekst
 
-**Priorytet: WYSOKI** | **Szacunek: 1 dzień**
+#### 1.3 Testy automatyczne ✅
 
-Problem: Ten sam `msgid` może mieć różne tłumaczenia w różnych kontekstach:
+**Ukończone w v1.0, rozbudowane do 91 testów w v1.4.0**
 
-```po
-msgctxt "menu"
-msgid "Open"
-msgstr "Otwórz"
+- [x] Test runner: wbudowany `node:test` — zero dependencies
+- [x] Testy unit: poParser.js, export.js, import.js, validate.js, preview.js
+- [x] Testy round-trip: export → import → porównanie z oryginałem
+- [x] Testy dla multi-line, msgctxt, edge cases (puste msgstr, znaki specjalne)
+- [x] Skrypt `npm test` w package.json
+- [x] Przykładowe pliki .po w `test/fixtures/` (en-US.po, pl-PL.po — 50 kluczy)
+- [x] 91 unit testów w 20 suite'ach (stan na v1.4.0)
 
-msgctxt "button"
-msgid "Open"
-msgstr "Otwórz plik"
-```
+#### 1.4 Publikacja v1.0–v1.1 ✅
 
-Co zrobić:
-
-- [ ] Parser rozpoznaje `msgctxt` w .po
-- [ ] W CSV key = `kontekst::klucz` (separator `::`)
-  ```
-  key|en|pl
-  menu::Open|Open|Otwórz
-  button::Open|Open|Otwórz plik
-  ```
-- [ ] Import odtwarza `msgctxt` z klucza CSV
-- [ ] Preview i Validate uwzględniają kontekst
-
-Pliki do zmiany: `lib/poParser.js`, `lib/export.js`, `lib/import.js`, `lib/preview.js`, `lib/validate.js`
-
-#### 1.3 Testy automatyczne
-
-**Priorytet: WYSOKI** | **Szacunek: 1-2 dni**
-
-Co zrobić:
-
-- [ ] Dodać test runner (wbudowany `node:test` — zero dependencies)
-- [ ] Testy unit dla `poParser.js` (parse + compile)
-- [ ] Testy round-trip: export → import → porównanie z oryginałem
-- [ ] Testy dla multi-line, msgctxt, edge cases (puste msgstr, znaki specjalne)
-- [ ] Skrypt `npm test` w package.json
-- [ ] Przykładowe pliki .po do testów w `test/fixtures/`
-
-Pliki do dodania: `test/`, `test/fixtures/*.po`
-
-#### 1.4 Publikacja v1.1
-
-- [ ] Aktualizacja README z nową dokumentacją (msgctxt, multiline)
-- [ ] Aktualizacja package.json (nowa nazwa jeśli zdecydowana, version bump)
-- [ ] `npm publish`
-- [ ] Tag na GitHubie
+- [x] Rename: `po-csv-tool` → `translation-toolkit`
+- [x] Aktualizacja README, package.json, bin/
+- [x] `npm publish` — v1.0.0
+- [x] Tag na GitHubie
 
 ---
 
-### Faza 2 — Plural forms (v1.2)
+### Faza 1.x — Polish, bugfixes & DX (v1.2–v1.4.0) ✅ UKOŃCZONA
+
+> Funkcje dodane organicznie na podstawie real-world testowania.
+
+#### v1.2.0 — Preview & Watch ✅
+
+- [x] `preview` — serwer HTTP z tabelą tłumaczeń, walidacją, statystykami, diff
+- [x] `--watch` — auto-reload po zmianach w plikach .po
+- [x] Port auto-increment — jeśli port zajęty, próbuje następny
+- [x] Dark mode toggle
+- [x] Wyszukiwarka kluczy
+- [x] Inline editing z Apply/Discard
+
+#### v1.3.0–v1.3.2 — Bugfixes ✅
+
+- [x] Fix: `--watch` crashował z `ReferenceError: fs is not defined`
+- [x] Fix: Plural-Forms continuation lines normalizowane do jednej linii
+- [x] Fix: Puste linie między wpisami dodawane/usuwane po imporcie
+- [x] Fix: Komentarze (`#.`, `#:`, `#,`) nie zachowywane byte-for-byte
+
+#### v1.4.0 — Static HTML export, Sticky header, --ci ✅
+
+- [x] `--static` / `-s` — generuje standalone HTML (self-contained, zero fetch)
+- [x] `--output` / `-o` — custom output path dla static HTML
+- [x] `--static` + `--watch` rejection (error + exit 1)
+- [x] Client-side diff (`parseCsvString`, `csvToData`, `clientDiff`) — diff bez backendu
+- [x] Inline editing guard (`if (STATIC_MODE) return`), save bar `display:none`
+- [x] Fix: sticky header — usunięto `overflow:hidden`, `border-collapse:separate`
+- [x] `--ci` flag — auto-wybiera katalog bez interakcji
+- [x] 91 unit testów, 29/29 integration testów na real-world projekcie
+- [x] `npm publish` — v1.4.0 (commit `1710e99`)
+- [x] test-prompt.md — protokół testów real-world (29 checków + regresje)
+
+---
+
+### v1.4.1 — DX patch (z real-world testów) ⏳ W TRAKCIE
+
+> Szybki patch (~1h) przed przejściem do Fazy 2 (plural forms).
+> Zakres okrojony: P1 + P2 + P4. P3 (`--separator`) usunięte jako YAGNI.
+> Zmiany wynikające z testowania v1.4.0 na projekcie `opbox-one-merchants-gui` (256 kluczy × 2 języki).
+
+#### P1. Static preview → folder `translation-preview/index.html`
+
+**Priorytet: ŚREDNI** | **Szacunek: 30 min**
+
+Problem: `--static` generuje `translation-preview.html` w katalogu głównym projektu — zaśmieca root. Lepiej: `translation-preview/index.html` (folder).
+
+- [ ] Zmienić domyślny output z `translation-preview.html` → `translation-preview/index.html`
+- [ ] `mkdir -p` przed zapisem
+- [ ] `-o` nadal nadpisuje ścieżkę (bez zmian)
+- [ ] Aktualizacja testów, README, test-prompt.md
+
+Pliki do zmiany: `lib/preview.js`, `test/preview.test.js`
+
+#### P2. Fix double port log (anomalia A3)
+
+**Priorytet: NISKI** | **Szacunek: 15 min**
+
+Problem: Przy zajętym porcie najpierw loguje "running at port X" (błędnie), potem "Port X is in use, trying X+1..." i dopiero "running at port X+1".
+
+- [ ] Usunąć przedwczesny log — logować port dopiero po udanym `listen()`
+
+Pliki do zmiany: `lib/preview.js`
+
+#### ~~P3. Flaga `--separator` dla export/import~~ ❌ USUNIĘTE (YAGNI)
+
+> **Decyzja (22.02.2026):** Usunięte z zakresu v1.4.1. Nikt nie zgłaszał potrzeby zmiany separatora CSV.
+> Jeśli pojawi się realna potrzeba — wróci w przyszłej wersji.
+
+#### P4. Flaga `--exit-zero` dla diff
+
+**Priorytet: NISKI** | **Szacunek: 20 min**
+
+Problem: `diff` zwraca exit code 1 gdy są różnice — w CI to fail. `--exit-zero` pozwala zwrócić 0 nawet przy różnicach (przydatne w pipeline'ach informacyjnych).
+
+- [ ] Dodać `--exit-zero` do diff
+- [ ] Aktualizacja CLI help
+
+Pliki do zmiany: `lib/diff.js` (jeśli istnieje), `bin/translation-toolkit.js`
+
+#### P5. Publikacja v1.4.1
+
+- [ ] Bump version → 1.4.1
+- [ ] Aktualizacja CHANGELOG.md
+- [ ] Zaktualizować testy (91+ testów)
+- [ ] Zaktualizować test-prompt.md (wersja → 1.4.1, nowe testy)
+- [ ] `npm publish`
+- [ ] Git tag
+
+---
+
+### Faza 2 — Plural forms (v1.5.0) ⏳ NASTĘPNA (po v1.4.1)
 
 Cel: pełne wsparcie dla form liczby mnogiej — kluczowa cecha gettext.
+
+> **⚠️ KRYTYCZNE odkrycie (22.02.2026):** Analiza `lib/poParser.js` wykazała, że `parsePo()` **cicho gubi wpisy z plural forms** — `msgid_plural` i `msgstr[N]` nie są obsługiwane przez state machine (linie 60-117). W efekcie:
+> - **Export**: wpisy z pluralami są pomijane w CSV (data loss!)
+> - **Import (patchPoFile)**: linie msgid_plural/msgstr[N] są preservowane jako "unrecognized" — brak data loss, ale też brak możliwości edycji
+>
+> To podnosi priorytet Fazy 2 — nie jest to "nice to have" lecz fix na silent data loss.
 
 #### 2.1 Parsowanie plural forms z .po
 
@@ -172,14 +241,14 @@ Pliki do zmiany: `lib/validate.js`
 - [ ] Stats: liczenie pokrycia uwzględniające plurale
 - [ ] Diff: porównywanie plural forms
 
-#### 2.5 Publikacja v1.2
+#### 2.5 Publikacja v1.5 / v2.0
 
 - [ ] Aktualizacja README
 - [ ] `npm publish`
 
 ---
 
-### Faza 3 — Nowe formaty (v2.0) 🔮 WAŻNE, ALE PÓŹNIEJ
+### Faza 3 — Nowe formaty (v2.0+) 🔮 WAŻNE, ALE PÓŹNIEJ
 
 Cel: rozszerzenie o eksport/import do JSON i i18next. Zmienia charakter paczki z "PO ↔ CSV" na "translation Swiss Army Knife".
 
@@ -258,7 +327,7 @@ Co zrobić:
 - [ ] Raport: brakujące klucze, dodatkowe klucze, różnice w tłumaczeniach
 - [ ] Exit code 1 jeśli są rozbieżności (CI-friendly)
 
-#### 3.4 Finalizacja v2.0
+#### 3.4 Finalizacja v2.0+
 
 - [ ] Major version bump (2.0.0)
 - [ ] Aktualizacja README — dokumentacja nowych formatów
@@ -270,38 +339,57 @@ Co zrobić:
 
 ## 3. Podsumowanie szacunków
 
-| Faza       | Zakres                          | Szacunek | Publikacja           |
-| ---------- | ------------------------------- | -------- | -------------------- |
-| **Faza 1** | multiline + msgctxt + testy     | ~3-4 dni | v1.1 → `npm publish` |
-| **Faza 2** | plural forms                    | ~3-4 dni | v1.2 → `npm publish` |
-| **Faza 3** | JSON + i18next + cross-validate | ~5-6 dni | v2.0 → `npm publish` |
+| Faza            | Zakres                                           | Szacunek   | Status                       |
+| --------------- | ------------------------------------------------ | ---------- | ---------------------------- |
+| **Faza 1**      | multiline + msgctxt + testy                      | ~3-4 dni   | ✅ v1.0–v1.1 (20.02.2026)    |
+| **Faza 1.x**    | preview, watch, static, --ci, bugfixes           | ~5 dni     | ✅ v1.2–v1.4.0 (22.02.2026)  |
+| **v1.4.1**      | DX patch: folder output, port log fix, --exit-zero | ~1h       | ⏳ w trakcie                  |
+| **Faza 2**      | plural forms (**⚠️ fix data loss**)                | ~3-4 dni   | ⏳ następna (po v1.4.1)       |
+| **Faza 3**      | JSON + i18next + cross-validate                  | ~5-6 dni   | 🔮 przyszłość                 |
 
-**Łącznie: ~11-14 dni roboczych** do pełnego v2.0
+**Dotychczasowy czas**: ~8-9 dni (Faza 1 + 1.x)
+**Pozostało**: ~1h (v1.4.1) + ~3-4 dni (Faza 2) + ~5-6 dni (Faza 3)
 
 ---
 
 ## 4. Decyzje podjęte
 
-| Temat              | Decyzja                                          | Data       |
-| ------------------ | ------------------------------------------------ | ---------- |
-| Nazwa paczki       | `translation-toolkit`                            | 20.02.2026 |
-| Kolejność prac     | Faza 1 → Faza 2 → Faza 3 (iteracyjnie)           | 20.02.2026 |
-| Publikacja         | Po Fazie 1 (nie czekamy na wszystko)             | 20.02.2026 |
-| JSON/i18next       | Ważne, ale Faza 3 — po solidnym core             | 20.02.2026 |
-| Testy              | Dodajemy w Fazie 1 (przed rozwojem plural forms) | 20.02.2026 |
-| Zero-dependency    | Utrzymujemy — kluczowy wyróżnik                  | 20.02.2026 |
-| Plural forms w CSV | Osobne wiersze z `key[N]` sufiksem               | 20.02.2026 |
-| Separator msgctxt  | `::` (np. `menu::Open`)                          | 20.02.2026 |
+| Temat                  | Decyzja                                                      | Data       |
+| ---------------------- | ------------------------------------------------------------ | ---------- |
+| Nazwa paczki           | `translation-toolkit`                                        | 20.02.2026 |
+| Kolejność prac         | Faza 1 → 1.x → v1.4.1 → Faza 2 → Faza 3                     | 20.02.2026 |
+| Opcja A (v1.4.1→v1.5)  | v1.4.1 (P1+P2+P4, ~1h) → v1.5.0 (plural forms). P3 dropped  | 22.02.2026 |
+| Plural forms data loss | parsePo() cicho gubi msgid_plural/msgstr[N] — fix w Faza 2   | 22.02.2026 |
+| Publikacja             | Po Fazie 1 (nie czekamy na wszystko)                         | 20.02.2026 |
+| JSON/i18next           | Ważne, ale Faza 3 — po solidnym core                         | 20.02.2026 |
+| Testy                  | `node:test` — 91 testów, 20 suite'ów                         | 20.02.2026 |
+| Zero-dependency        | Utrzymujemy — kluczowy wyróżnik                              | 20.02.2026 |
+| Plural forms w CSV     | Osobne wiersze z `key[N]` sufiksem                           | 20.02.2026 |
+| Separator msgctxt      | `::` (np. `menu::Open`)                                      | 20.02.2026 |
+| Static preview         | `--static` generuje self-contained HTML                      | 21.02.2026 |
+| Static → folder        | Domyślny output: `translation-preview/index.html` (v1.4.1)  | 22.02.2026 |
+| Real-world test prompt | `test-prompt.md` — 29 checków + regresje + anomalie          | 22.02.2026 |
 
-## 5. Co trzeba zrobić przy zmianie nazwy (przed publikacją v1.1)
+## 5. Zmiana nazwy ✅ UKOŃCZONE
 
-- [ ] `package.json` → `"name": "translation-toolkit"`
-- [ ] `package.json` → `"bin": { "translation-toolkit": "./bin/translation-toolkit.js" }`
-- [ ] Rename `bin/po-csv-tool.js` → `bin/translation-toolkit.js`
-- [ ] Zaktualizować wszystkie referencje do starej nazwy w kodzie i README
-- [ ] Zaktualizować repo URL na GitHub (opcjonalnie)
-- [ ] Sprawdzić czy `npx translation-toolkit --help` działa
+- [x] `package.json` → `"name": "translation-toolkit"`
+- [x] `package.json` → `"bin": { "translation-toolkit": "./bin/translation-toolkit.js" }`
+- [x] Rename `bin/po-csv-tool.js` → `bin/translation-toolkit.js` (zachowany jako alias)
+- [x] Zaktualizowane wszystkie referencje w kodzie i README
+- [x] Repo URL: https://github.com/qubuss/translation-toolkit
+- [x] `npx translation-toolkit --help` działa ✅
 
 ## 6. Otwarte pytania
 
-_(Brak — wszystkie kluczowe decyzje podjęte. Szczegóły implementacyjne rozstrzygamy w trakcie prac.)_
+- **Plural forms format w preview** — czy grupować wiersze `key[0]`, `key[1]`, `key[2]` wizualnie? Czy zwijać/rozwijać?
+- **Version bump Faza 2** — v1.5.0 (minor, rekomendowane) bo CSV format jest backwards-compatible (nowe wiersze `key[N]` nie łamią starych importów)
+
+## 7. Historia wydań
+
+| Wersja  | Data       | Kluczowe zmiany                                          |
+| ------- | ---------- | -------------------------------------------------------- |
+| v1.0.0  | 20.02.2026 | Initial release — export, import, preview, validate, stats, diff |
+| v1.2.0  | 20.02.2026 | Preview server, --watch, port auto-increment             |
+| v1.3.0  | 21.02.2026 | --watch fix (fs), format preservation fixes              |
+| v1.3.2  | 21.02.2026 | Plural-Forms, blank lines, comments preservation         |
+| v1.4.0  | 22.02.2026 | --static HTML, sticky header, --ci, 91 tests             |
