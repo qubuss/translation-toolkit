@@ -58,6 +58,8 @@ STATS OPTIONS
 DIFF OPTIONS
   -d, --dir <path>      Translations directory (for CSV vs .po mode)
   -D, --delimiter <ch>  Column delimiter (default: |)
+  --exit-zero           Always exit 0, even when differences are found
+                        (useful for informational diff in CI pipelines)
 
 GLOBAL OPTIONS
   --ci                  Non-interactive mode for CI/CD pipelines

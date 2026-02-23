@@ -142,18 +142,19 @@ describe('generateStaticPreview', () => {
 // ─── CLI: --static flag ──────────────────────────────────
 
 describe('CLI --static flag', () => {
-  it('generates default translation-preview.html', () => {
+  it('generates default translation-preview/index.html', () => {
     const cwd = TMP;
     // Clean up any previous output
-    const defaultOutput = path.join(cwd, 'translation-preview.html');
-    if (fs.existsSync(defaultOutput)) fs.unlinkSync(defaultOutput);
+    const defaultDir = path.join(cwd, 'translation-preview');
+    if (fs.existsSync(defaultDir)) fs.rmSync(defaultDir, { recursive: true });
+    const defaultOutput = path.join(defaultDir, 'index.html');
 
     execFileSync(process.execPath, [CLI, 'preview', '--dir', FIXTURES, '--static'], {
       cwd,
       timeout: 10000,
     });
 
-    assert.ok(fs.existsSync(defaultOutput), 'should create translation-preview.html');
+    assert.ok(fs.existsSync(defaultOutput), 'should create translation-preview/index.html');
 
     const content = fs.readFileSync(defaultOutput, 'utf-8');
     assert.ok(content.includes('STATIC_MODE = true'), 'default output should have STATIC_MODE = true');

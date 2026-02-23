@@ -170,7 +170,7 @@ translation-toolkit preview [options]
 | `-p, --port <number>` | HTTP server port                            | `3456`                     |
 | `-w, --watch`         | Auto-reload on `.po` file changes           | off                        |
 | `-s, --static`        | Generate a standalone HTML file (no server) | off                        |
-| `-o, --output <path>` | Output file path (with `--static`)          | `translation-preview.html` |
+| `-o, --output <path>` | Output file path (with `--static`)          | `translation-preview/index.html` |
 
 If the requested port is in use, the server automatically tries the next port (up to 20 attempts).
 
@@ -253,6 +253,7 @@ translation-toolkit diff translations.csv
 | ---------------------- | ------------------------------------------ | ------------- |
 | `-d, --dir <path>`     | Translations directory (CSV vs `.po` mode) | auto-discover |
 | `-D, --delimiter <ch>` | Column delimiter                           | `\|`          |
+| `--exit-zero`          | Always exit 0 even if differences found    | off           |
 
 Detects:
 
@@ -260,7 +261,7 @@ Detects:
 - **Removed keys** — in old but not in new
 - **Changed values** — same key, different translation (per-language)
 
-Exits with code 1 if differences found (useful for CI).
+Exits with code 1 if differences found (useful for CI). Use `--exit-zero` for informational diffs in pipelines.
 
 ![Diff CSV vs CSV](docs/screenshots/diff_csv_csv.png)
 
@@ -271,7 +272,7 @@ All commands exit with code 0 on success. Some commands use non-zero exit codes 
 | Command    | Exit Code | Meaning                                   |
 | ---------- | --------- | ----------------------------------------- |
 | `validate` | `1`       | Validation errors found                   |
-| `diff`     | `1`       | Differences found (like Unix `diff`)      |
+| `diff`     | `1`       | Differences found (use `--exit-zero` to override) |
 | Any        | `1`       | Fatal error (missing file, invalid input) |
 
 ## Auto-Discovery

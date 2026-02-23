@@ -292,6 +292,55 @@ rm -rf /tmp/tt-empty-dir
 - [ ] Wypisuje błąd o braku plików .po
 - [ ] Exit code != 0
 
+**8d. Test deployed static HTML (serwowanie jako strona) [v1.4.0 NEW]:**
+
+```bash
+# Wygeneruj static HTML i wystawij na prostym serwerze
+translation-toolkit preview --dir "$PO_DIR" --static -o /tmp/tt-static-deploy.html
+
+# Serwuj plik na porcie 8899 (symulacja GitHub Pages / nginx / S3)
+python3 -m http.server 8899 --directory /tmp &
+STATIC_SERVER_PID=$!
+sleep 1
+
+# Pobierz stronę i sprawdź zawartość
+curl -s http://localhost:8899/tt-static-deploy.html > /tmp/tt-static-fetched.html
+STATIC_SIZE=$(wc -c < /tmp/tt-static-fetched.html | tr -d ' ')
+echo "Fetched size: $STATIC_SIZE bytes"
+
+# Sprawdź kluczowe elementy HTML
+echo "=== Struktura ==="
+grep -c 'STATIC_MODE = true' /tmp/tt-static-fetched.html
+grep -c '<table' /tmp/tt-static-fetched.html
+grep -c 'tab-btn' /tmp/tt-static-fetched.html       # zakładki
+grep -c 'searchInput' /tmp/tt-static-fetched.html    # wyszukiwarka
+grep -c 'dark-mode' /tmp/tt-static-fetched.html      # dark mode toggle
+grep -c 'clientDiff' /tmp/tt-static-fetched.html     # client-side diff
+grep -c 'display:none\|display: none' /tmp/tt-static-fetched.html  # save bar ukryty
+
+# Sprawdź że dane tłumaczeń są osadzone (nie ładowane z API)
+grep -c 'DATA_ROWS' /tmp/tt-static-fetched.html || \
+  grep -c 'const rows' /tmp/tt-static-fetched.html || \
+  echo "WARNING: Nie znaleziono osadzonych danych tłumaczeń"
+
+kill $STATIC_SERVER_PID 2>/dev/null
+rm -f /tmp/tt-static-deploy.html /tmp/tt-static-fetched.html
+```
+
+Checklist:
+
+- [ ] Plik HTML serwuje się poprawnie z prostego serwera HTTP (curl zwraca treść)
+- [ ] Rozmiar pobranego pliku > 1 KB (dane są osadzone)
+- [ ] `STATIC_MODE = true` obecne
+- [ ] Tabela HTML obecna (`<table>`)
+- [ ] Zakładki obecne (`tab-btn`): Translations, Validation, Statistics, Diff
+- [ ] Wyszukiwarka obecna (`searchInput`)
+- [ ] Dark mode toggle obecny
+- [ ] Client-side diff obecny (`clientDiff`) — diff działa bez backendu
+- [ ] Save bar ukryty (`display:none`) — edycja zablokowana w trybie statycznym
+- [ ] Dane tłumaczeń osadzone inline (nie wymagają fetch do API)
+- [ ] **Plik jest w pełni self-contained** — zero zewnętrznych zależności (brak CDN, brak fetch)
+
 ### 9. Edge cases
 
 Sprawdź które z poniższych występują w projekcie i czy są obsłużone:
@@ -438,6 +487,7 @@ Wygeneruj raport **dokładnie** w poniższym formacie:
 | 14 | --static HTML export | ✅/❌ | standalone HTML generated? |
 | 15 | --static custom output | ✅/❌ | -o flag works? |
 | 16 | --static + --watch rejection | ✅/❌ | error message shown? |
+| 17 | --static deployed HTML | ✅/❌ | serves from static server? self-contained? |
 | **R1** | **--watch nie crashuje** | ✅/❌ | v1.3.0 bug: `fs is not defined` |
 | **R2** | **Nagłówek tabeli na pozycji 1** | ✅/❌ | v1.3.0 bug: header na 4. pozycji |
 | **R3** | **Plural-Forms zachowany** | ✅/❌ | v1.3.0 bug: normalizacja do 1 linii |
