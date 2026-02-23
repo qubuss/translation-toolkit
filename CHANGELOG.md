@@ -3,6 +3,23 @@
 All notable changes to **translation-toolkit** are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.4.1] — 2026-02-23
+
+### Changed
+
+- **`--static` default output** — now generates `translation-preview/index.html` instead of `translation-preview.html` in the project root (keeps root clean). The `-o` flag still overrides the path.
+- **Port auto-increment guard fix** — the "max 20 retries" check now compares against the originally requested port (was always false before)
+- Stale listeners are removed before retrying the next port (`server.removeAllListeners('listening')`)
+
+### Added
+
+- **`--exit-zero` flag for `diff`** — always exit with code 0 even when differences are found; useful for informational diffs in CI pipelines
+- New `test/diff.test.js` — 5 tests for `computeDiff()` and CLI exit codes
+
+### Tests
+
+- 96 tests across 22 suites (was 91 / 20)
+
 ## [1.4.0] — 2026-02-22
 
 ### Added
