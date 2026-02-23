@@ -6,7 +6,7 @@ Wklej poniższy prompt w czacie nowego projektu (który ma pliki .po):
 
 ## PROMPT START
 
-Zainstaluj i przetestuj narzędzie `translation-toolkit@1.4.0` (npm) na tym projekcie.
+Zainstaluj i przetestuj narzędzie `translation-toolkit@1.5.0` (npm) na tym projekcie.
 Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj raport.
 
 > Komendy: `export`, `import`, `preview`, `validate`, `stats`, `diff`
@@ -14,8 +14,8 @@ Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj 
 ### 0. Instalacja
 
 ```bash
-npm install -g translation-toolkit@1.4.0
-translation-toolkit --version   # powinno wypisać 1.4.0
+npm install -g translation-toolkit@1.5.0
+translation-toolkit --version   # powinno wypisać 1.5.0
 ```
 
 ### 1. Odkrywanie plików .po
@@ -427,6 +427,104 @@ grep -c "clientDiff" /tmp/tt-static-test.html
 - [ ] Inline editing jest zablokowany (guard `if (STATIC_MODE) return`)
 - [ ] Save bar ma `display:none`
 
+### 13. Test PLURAL FORMS (v1.5.0)
+
+> Testuje pełny pipeline `msgid_plural` / `msgstr[N]` — export, import, validate, stats, preview, diff.
+
+**13a. Sprawdź czy projekt ma wpisy z `msgid_plural`**
+
+```bash
+grep -l "msgid_plural" "$PO_DIR"/*.po
+grep -c "msgid_plural" "$PO_DIR"/*.po
+```
+
+Zanotuj:
+
+- Liczba plików z pluralami: \_\_\_
+- Łączna liczba wpisów z `msgid_plural`: \_\_\_
+
+**13b. Export plurali do CSV**
+
+```bash
+translation-toolkit export --dir "$PO_DIR" -o /tmp/tt-plural-test.csv
+grep '\[0\]' /tmp/tt-plural-test.csv | head -5
+grep '\[1\]' /tmp/tt-plural-test.csv | head -5
+grep '\[2\]' /tmp/tt-plural-test.csv | head -5
+```
+
+- [ ] Log eksportu mówi "X plural" (lub "X keys (Y plural)")
+- [ ] CSV zawiera wiersze `key[0]`, `key[1]`, `key[2]` dla plurali
+- [ ] Języki z 2 formami (en, de) mają `[0]` i `[1]`, puste `[2]`
+- [ ] Języki z 3 formami (pl, cs, ru) mają wartości w `[2]`
+
+**13c. Import plurali (round-trip)**
+
+```bash
+cp -R "$PO_DIR" /tmp/tt-plural-reimport
+translation-toolkit import /tmp/tt-plural-test.csv --dir /tmp/tt-plural-reimport
+diff -r "$PO_DIR" /tmp/tt-plural-reimport
+```
+
+- [ ] Import nie zmienił plików (round-trip bezstratny)
+- [ ] Formy pluralne `msgstr[0]`…`msgstr[N]` są identyczne
+
+**13d. Validate — sprawdzenie plurali**
+
+```bash
+translation-toolkit validate --dir "$PO_DIR"
+```
+
+- [ ] Raport pokazuje "Plural entries: X"
+- [ ] Sprawdza `nplurals-mismatch` (forma vs nagłówek)
+- [ ] Sprawdza `empty-plural-form`
+- [ ] Sprawdza `missing-plural-key` / `extra-plural-key`
+- [ ] Sprawdza spójność zmiennych (`%d`, `%s`) w formach pluralnych
+
+**13e. Stats — liczniki plurali**
+
+```bash
+translation-toolkit stats --dir "$PO_DIR"
+```
+
+- [ ] Raport per-język pokazuje "Plurals: X entries (Y forms, Z empty)"
+- [ ] Liczba `pluralKeys` zgadza się z `grep -c msgid_plural`
+
+**13f. Preview — wyświetlanie plurali**
+
+```bash
+translation-toolkit preview --dir "$PO_DIR" --port 3456
+# Otwórz http://localhost:3456 w przeglądarce
+```
+
+- [ ] Wiersze pluralne mają etykietę "plural" (badge)
+- [ ] Wiersze pluralne mają subtelne kolorowe tło (accent)
+- [ ] Klucze pluralne wyświetlane jako `klucz[0]`, `klucz[1]`, `klucz[2]`
+- [ ] Kliknięcie na komórkę pluralną NIE otwiera edytora (read-only)
+- [ ] Search filtruje wiersze pluralne poprawnie
+
+**13g. Static preview — plurale w standalone HTML**
+
+```bash
+translation-toolkit preview --dir "$PO_DIR" --static -o /tmp/tt-plural-static.html
+# Otwórz plik w przeglądarce
+```
+
+- [ ] Wiersze pluralne widoczne z badge "plural"
+- [ ] Dane pluralne obecne w osadzonym `DATA` array
+
+**13h. Diff — plurale w porównaniu**
+
+```bash
+# Zmień wartość pluralną w CSV
+cp /tmp/tt-plural-test.csv /tmp/tt-plural-modified.csv
+# (edytuj jedną wartość key[1] w pliku)
+translation-toolkit diff /tmp/tt-plural-test.csv /tmp/tt-plural-modified.csv
+echo "Exit: $?"
+```
+
+- [ ] Diff wykrywa zmianę w wierszu `key[N]`
+- [ ] `translation-toolkit diff /tmp/tt-plural-test.csv --dir "$PO_DIR"` → "No differences" (CSV-vs-PO)
+
 ### 11. Anomalie i niestandardowe zachowania
 
 **WAŻNE**: Przez cały czas testowania notuj WSZYSTKIE niespodziewane zachowania, nawet jeśli nie są błędami. Anomalie to rzeczy, które Cię zaskoczyły, wymagały dodatkowej interwencji lub mogą być problemem dla innych użytkowników.
@@ -456,7 +554,7 @@ Dla każdej anomalii zanotuj:
 Wygeneruj raport **dokładnie** w poniższym formacie:
 
 ```
-## Translation Toolkit v1.4.0 — Test Report
+## Translation Toolkit v1.5.0 — Test Report
 
 **Projekt**: [nazwa projektu]
 **Pliki .po**: X plików, Y języków
@@ -494,6 +592,10 @@ Wygeneruj raport **dokładnie** w poniższym formacie:
 | **R4** | **Puste linie zachowane** | ✅/❌ | v1.3.0 bug: dodawanie/usuwanie blank lines |
 | **R5** | **--ci auto-wybiera katalog** | ✅/❌ | v1.4.0 new: nie pyta o wybór |
 | **R6** | **--static standalone HTML** | ✅/❌ | v1.4.0 new: client-side diff, no server |
+| **R7** | **Plural export key[N] rows** | ✅/❌ | v1.5.0 new: plurals as key[0], key[1]… |
+| **R8** | **Plural import round-trip** | ✅/❌ | v1.5.0 new: key[N] → msgstr[N] |
+| **R9** | **Plural validate checks** | ✅/❌ | v1.5.0 new: nplurals, empty forms |
+| **R10** | **Plural preview read-only** | ✅/❌ | v1.5.0 new: badge, no editing |
 
 ### Anomalie
 

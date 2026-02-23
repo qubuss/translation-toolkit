@@ -11,6 +11,7 @@ const path = require('path');
 const {
   parsePo,
   writePo,
+  patchPoFile,
   extractMeta,
   escapePo,
   unescapePo,
@@ -567,5 +568,322 @@ describe('edge cases', () => {
       const dk = key.replace('\x04', '::');
       assert.equal(reparsed.entries.get(key), value, `Round-trip mismatch for: ${dk}`);
     }
+  });
+});
+
+// ─── parsePo — plural forms ──────────────────────────────
+
+describe('parsePo — plural forms', () => {
+  it('returns pluralEntries map from en-US fixture', () => {
+    const { pluralEntries } = parsePo(path.join(FIXTURES, 'en-US.po'));
+    assert.equal(pluralEntries.size, 4, 'Should have 4 plural entries');
+  });
+
+  it('returns pluralEntries map from pl-PL fixture', () => {
+    const { pluralEntries } = parsePo(path.join(FIXTURES, 'pl-PL.po'));
+    assert.equal(pluralEntries.size, 4, 'Should have 4 plural entries');
+  });
+
+  it('does not mix plural entries into singular entries', () => {
+    const { entries, pluralEntries } = parsePo(path.join(FIXTURES, 'en-US.po'));
+    assert.equal(entries.size, 50, 'Singular entries unchanged');
+    assert.equal(pluralEntries.size, 4, 'Plural entries separate');
+    // Plural keys should NOT appear in entries
+    assert.equal(entries.has('%d file'), false, 'Plural key not in entries');
+  });
+
+  it('parses basic plural entry (en — 2 forms)', () => {
+    const { pluralEntries } = parsePo(path.join(FIXTURES, 'en-US.po'));
+    const entry = pluralEntries.get('%d file');
+    assert.ok(entry, 'Should have %d file plural entry');
+    assert.equal(entry.msgid, '%d file');
+    assert.equal(entry.msgid_plural, '%d files');
+    assert.equal(entry.msgstr.length, 2);
+    assert.equal(entry.msgstr[0], '%d file');
+    assert.equal(entry.msgstr[1], '%d files');
+    assert.equal(entry.msgctxt, undefined);
+  });
+
+  it('parses basic plural entry (pl — 3 forms)', () => {
+    const { pluralEntries } = parsePo(path.join(FIXTURES, 'pl-PL.po'));
+    const entry = pluralEntries.get('%d file');
+    assert.ok(entry, 'Should have %d file plural entry');
+    assert.equal(entry.msgid, '%d file');
+    assert.equal(entry.msgid_plural, '%d files');
+    assert.equal(entry.msgstr.length, 3);
+    assert.equal(entry.msgstr[0], '%d plik');
+    assert.equal(entry.msgstr[1], '%d pliki');
+    assert.equal(entry.msgstr[2], '%d plików');
+  });
+
+  it('parses plural entry with msgctxt', () => {
+    const { pluralEntries } = parsePo(path.join(FIXTURES, 'en-US.po'));
+    const key = 'notifications\x04You have %d new message';
+    const entry = pluralEntries.get(key);
+    assert.ok(entry, 'Should have msgctxt plural entry');
+    assert.equal(entry.msgctxt, 'notifications');
+    assert.equal(entry.msgid, 'You have %d new message');
+    assert.equal(entry.msgid_plural, 'You have %d new messages');
+    assert.equal(entry.msgstr[0], 'You have %d new message');
+    assert.equal(entry.msgstr[1], 'You have %d new messages');
+  });
+
+  it('parses plural entry with msgctxt (pl — 3 forms)', () => {
+    const { pluralEntries } = parsePo(path.join(FIXTURES, 'pl-PL.po'));
+    const key = 'notifications\x04You have %d new message';
+    const entry = pluralEntries.get(key);
+    assert.ok(entry, 'Should have msgctxt plural entry (pl)');
+    assert.equal(entry.msgstr.length, 3);
+    assert.equal(entry.msgstr[0], 'Masz %d nową wiadomość');
+    assert.equal(entry.msgstr[1], 'Masz %d nowe wiadomości');
+    assert.equal(entry.msgstr[2], 'Masz %d nowych wiadomości');
+  });
+
+  it('parses plural entry with variables', () => {
+    const { pluralEntries } = parsePo(path.join(FIXTURES, 'en-US.po'));
+    const entry = pluralEntries.get('%d item in cart');
+    assert.ok(entry, 'Should have %d item in cart plural entry');
+    assert.equal(entry.msgid, '%d item in cart');
+    assert.equal(entry.msgid_plural, '%d items in cart');
+    assert.equal(entry.msgstr[0], '%d item in cart');
+    assert.equal(entry.msgstr[1], '%d items in cart');
+  });
+
+  it('parses multi-line plural entry', () => {
+    const { pluralEntries } = parsePo(path.join(FIXTURES, 'en-US.po'));
+    const entry = pluralEntries.get('%d day remaining');
+    assert.ok(entry, 'Should have multiline plural entry');
+    assert.equal(entry.msgstr[0], '%d day remaining\nin your subscription');
+    assert.equal(entry.msgstr[1], '%d days remaining\nin your subscription');
+  });
+
+  it('parses multi-line plural entry (pl — 3 forms)', () => {
+    const { pluralEntries } = parsePo(path.join(FIXTURES, 'pl-PL.po'));
+    const entry = pluralEntries.get('%d day remaining');
+    assert.ok(entry, 'Should have multiline plural entry (pl)');
+    assert.equal(entry.msgstr.length, 3);
+    assert.equal(entry.msgstr[0], '%d dzień pozostał\nw Twojej subskrypcji');
+    assert.equal(entry.msgstr[1], '%d dni pozostały\nw Twojej subskrypcji');
+    assert.equal(entry.msgstr[2], '%d dni pozostało\nw Twojej subskrypcji');
+  });
+
+  it('returns empty pluralEntries for .po without plurals', () => {
+    // Write a .po file with only singular entries
+    const outPath = path.join(TMP, 'no-plurals.po');
+    writePo(outPath, { language: 'en-US', pluralForms: '' }, new Map([['hello', 'world']]));
+    const { pluralEntries } = parsePo(outPath);
+    assert.equal(pluralEntries.size, 0);
+  });
+});
+
+// ─── writePo — plural forms ─────────────────────────────
+
+describe('writePo — plural forms', () => {
+  it('writes basic plural entries', () => {
+    const outPath = path.join(TMP, 'write-plural.po');
+    const pluralEntries = new Map([
+      ['%d cat', {
+        msgid: '%d cat',
+        msgid_plural: '%d cats',
+        msgstr: ['%d cat', '%d cats'],
+      }],
+    ]);
+    writePo(outPath, { language: 'en-US', pluralForms: 'nplurals=2; plural=(n != 1)' }, new Map(), pluralEntries);
+
+    const content = fs.readFileSync(outPath, 'utf-8');
+    assert.ok(content.includes('msgid "%d cat"'), 'Should contain msgid');
+    assert.ok(content.includes('msgid_plural "%d cats"'), 'Should contain msgid_plural');
+    assert.ok(content.includes('msgstr[0] "%d cat"'), 'Should contain msgstr[0]');
+    assert.ok(content.includes('msgstr[1] "%d cats"'), 'Should contain msgstr[1]');
+  });
+
+  it('writes plural entries with msgctxt', () => {
+    const outPath = path.join(TMP, 'write-plural-ctx.po');
+    const pluralEntries = new Map([
+      ['shop\x04%d item', {
+        msgid: '%d item',
+        msgid_plural: '%d items',
+        msgstr: ['%d item', '%d items'],
+        msgctxt: 'shop',
+      }],
+    ]);
+    writePo(outPath, { language: 'en-US', pluralForms: '' }, new Map(), pluralEntries);
+
+    const content = fs.readFileSync(outPath, 'utf-8');
+    assert.ok(content.includes('msgctxt "shop"'), 'Should contain msgctxt');
+    assert.ok(content.includes('msgid "%d item"'), 'Should contain msgid');
+    assert.ok(content.includes('msgid_plural "%d items"'), 'Should contain msgid_plural');
+  });
+
+  it('writes 3-form plural entries', () => {
+    const outPath = path.join(TMP, 'write-plural-3.po');
+    const pluralEntries = new Map([
+      ['%d plik', {
+        msgid: '%d plik',
+        msgid_plural: '%d pliki',
+        msgstr: ['%d plik', '%d pliki', '%d plików'],
+      }],
+    ]);
+    writePo(outPath, { language: 'pl-PL', pluralForms: 'nplurals=3; plural=...' }, new Map(), pluralEntries);
+
+    const content = fs.readFileSync(outPath, 'utf-8');
+    assert.ok(content.includes('msgstr[0] "%d plik"'));
+    assert.ok(content.includes('msgstr[1] "%d pliki"'));
+    assert.ok(content.includes('msgstr[2] "%d plik\\xC3\\xB3w"') || content.includes('msgstr[2] "%d plików"'));
+  });
+
+  it('writes multi-line plural msgstr', () => {
+    const outPath = path.join(TMP, 'write-plural-ml.po');
+    const pluralEntries = new Map([
+      ['%d day', {
+        msgid: '%d day',
+        msgid_plural: '%d days',
+        msgstr: ['%d day\nremaining', '%d days\nremaining'],
+      }],
+    ]);
+    writePo(outPath, { language: 'en-US', pluralForms: '' }, new Map(), pluralEntries);
+
+    const content = fs.readFileSync(outPath, 'utf-8');
+    assert.ok(content.includes('msgstr[0] ""'), 'Multiline msgstr[0] should start empty');
+    assert.ok(content.includes('"%d day\\n"'), 'Should have multiline continuation');
+    assert.ok(content.includes('"remaining"'), 'Should have second line');
+  });
+
+  it('round-trips plural entries through write → parse', () => {
+    const outPath = path.join(TMP, 'roundtrip-plural.po');
+    const originalPlurals = new Map([
+      ['%d dog', {
+        msgid: '%d dog',
+        msgid_plural: '%d dogs',
+        msgstr: ['%d dog', '%d dogs'],
+      }],
+      ['ctx\x04%d thing', {
+        msgid: '%d thing',
+        msgid_plural: '%d things',
+        msgstr: ['%d thing', '%d things'],
+        msgctxt: 'ctx',
+      }],
+    ]);
+    const originalEntries = new Map([['hello', 'world']]);
+
+    writePo(outPath, { language: 'en-US', pluralForms: 'nplurals=2; plural=(n != 1)' }, originalEntries, originalPlurals);
+
+    const reparsed = parsePo(outPath);
+    assert.equal(reparsed.entries.size, 1);
+    assert.equal(reparsed.entries.get('hello'), 'world');
+    assert.equal(reparsed.pluralEntries.size, 2);
+
+    const dog = reparsed.pluralEntries.get('%d dog');
+    assert.ok(dog);
+    assert.equal(dog.msgid, '%d dog');
+    assert.equal(dog.msgid_plural, '%d dogs');
+    assert.deepEqual(dog.msgstr, ['%d dog', '%d dogs']);
+
+    const thing = reparsed.pluralEntries.get('ctx\x04%d thing');
+    assert.ok(thing);
+    assert.equal(thing.msgctxt, 'ctx');
+    assert.equal(thing.msgid, '%d thing');
+    assert.deepEqual(thing.msgstr, ['%d thing', '%d things']);
+  });
+});
+
+// ─── patchPoFile — plural forms ─────────────────────────
+
+describe('patchPoFile — plural forms', () => {
+  it('patches a single plural form without touching others', () => {
+    // Copy fixture
+    const srcPath = path.join(FIXTURES, 'pl-PL.po');
+    const patchPath = path.join(TMP, 'patch-plural.po');
+    fs.copyFileSync(srcPath, patchPath);
+
+    const beforeParse = parsePo(patchPath);
+    const originalPlurals = beforeParse.pluralEntries;
+    assert.equal(originalPlurals.get('%d file').msgstr[1], '%d pliki');
+
+    // Patch msgstr[1] of "%d file"
+    const newPluralEntries = new Map([
+      ['%d file', { msgstr: ['%d plik', '%d pliki ZMIENIONE', '%d plików'] }],
+    ]);
+    patchPoFile(patchPath, beforeParse.entries, false, newPluralEntries);
+
+    const afterParse = parsePo(patchPath);
+    // Only form [1] should change
+    assert.equal(afterParse.pluralEntries.get('%d file').msgstr[0], '%d plik');
+    assert.equal(afterParse.pluralEntries.get('%d file').msgstr[1], '%d pliki ZMIENIONE');
+    assert.equal(afterParse.pluralEntries.get('%d file').msgstr[2], '%d plików');
+    // Other plural entries unchanged
+    assert.equal(afterParse.pluralEntries.get('%d item in cart').msgstr[0], '%d element w koszyku');
+    // Singular entries unchanged
+    assert.equal(afterParse.entries.size, 50);
+    assert.equal(afterParse.entries.get('simple.key'), 'Prosta wartość');
+  });
+
+  it('patches plural entry with msgctxt', () => {
+    const srcPath = path.join(FIXTURES, 'pl-PL.po');
+    const patchPath = path.join(TMP, 'patch-plural-ctx.po');
+    fs.copyFileSync(srcPath, patchPath);
+
+    const beforeParse = parsePo(patchPath);
+    const key = 'notifications\x04You have %d new message';
+
+    const newPluralEntries = new Map([
+      [key, { msgstr: ['ZMIENIONE %d', 'ZMIENIONE %d wiadomości', 'ZMIENIONE %d wiadomości'] }],
+    ]);
+    patchPoFile(patchPath, beforeParse.entries, false, newPluralEntries);
+
+    const afterParse = parsePo(patchPath);
+    const patched = afterParse.pluralEntries.get(key);
+    assert.equal(patched.msgstr[0], 'ZMIENIONE %d');
+    assert.equal(patched.msgstr[1], 'ZMIENIONE %d wiadomości');
+    assert.equal(patched.msgstr[2], 'ZMIENIONE %d wiadomości');
+  });
+
+  it('preserves multi-line plural entries when unchanged', () => {
+    const srcPath = path.join(FIXTURES, 'pl-PL.po');
+    const patchPath = path.join(TMP, 'patch-plural-preserve.po');
+    fs.copyFileSync(srcPath, patchPath);
+
+    const original = fs.readFileSync(patchPath, 'utf-8');
+    const beforeParse = parsePo(patchPath);
+
+    // Pass same values — nothing should change
+    const newPluralEntries = new Map([
+      ['%d day remaining', {
+        msgstr: [
+          '%d dzień pozostał\nw Twojej subskrypcji',
+          '%d dni pozostały\nw Twojej subskrypcji',
+          '%d dni pozostało\nw Twojej subskrypcji',
+        ]
+      }],
+    ]);
+    patchPoFile(patchPath, beforeParse.entries, false, newPluralEntries);
+
+    const patched = fs.readFileSync(patchPath, 'utf-8');
+    assert.equal(patched, original, 'File should be identical when no values changed');
+  });
+
+  it('patches multi-line plural form', () => {
+    const srcPath = path.join(FIXTURES, 'pl-PL.po');
+    const patchPath = path.join(TMP, 'patch-plural-ml.po');
+    fs.copyFileSync(srcPath, patchPath);
+
+    const beforeParse = parsePo(patchPath);
+
+    const newPluralEntries = new Map([
+      ['%d day remaining', {
+        msgstr: [
+          '%d dzień pozostał\nw Twojej subskrypcji',
+          '%d dni ZMIENIONE\nw subskrypcji',
+          '%d dni pozostało\nw Twojej subskrypcji',
+        ]
+      }],
+    ]);
+    patchPoFile(patchPath, beforeParse.entries, false, newPluralEntries);
+
+    const afterParse = parsePo(patchPath);
+    const entry = afterParse.pluralEntries.get('%d day remaining');
+    assert.equal(entry.msgstr[0], '%d dzień pozostał\nw Twojej subskrypcji', 'Form 0 unchanged');
+    assert.equal(entry.msgstr[1], '%d dni ZMIENIONE\nw subskrypcji', 'Form 1 changed');
+    assert.equal(entry.msgstr[2], '%d dni pozostało\nw Twojej subskrypcji', 'Form 2 unchanged');
   });
 });

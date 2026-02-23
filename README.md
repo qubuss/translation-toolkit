@@ -41,7 +41,8 @@ A zero-dependency CLI tool to convert between [GNU gettext `.po`](https://www.gn
 - **Browser preview** — view all translations in a searchable table at `localhost`
 - **Static export** — generate a standalone HTML preview file for GitHub Pages / S3 / email
 - **Inline editing** — click any cell in the preview to edit translations directly in the browser
-- **Validation** — check for missing keys, empty translations, variable mismatches
+- **Plural forms** — full `msgid_plural` / `msgstr[N]` support: export as `key[N]` rows, import back, validate nplurals, preview with badge
+- **Validation** — check for missing keys, empty translations, variable mismatches, plural form consistency
 - **Statistics** — per-language coverage reports with progress bars
 - **Diff** — compare two CSV files or a CSV against current `.po` files
 - **Dark mode** — toggle between light and dark themes in the browser preview
@@ -123,6 +124,19 @@ mainMenu.send|Send packages|Wyślij przesyłki
 mainMenu.help|Help|Pomoc
 ```
 
+#### Plural forms in CSV
+
+Plural entries are exported as separate `key[N]` rows — one per plural form:
+
+```text
+key|en|pl
+1 file[0]|%d file|%d plik
+1 file[1]|%d files|%d pliki
+1 file[2]||%d plików
+```
+
+English has 2 forms (`[0]` singular, `[1]` plural). Polish has 3 forms. Empty cells are filled when a language has fewer forms. On import, `key[N]` rows are automatically grouped back into `msgid_plural` / `msgstr[N]` blocks.
+
 ### Import (CSV → `.po`)
 
 ```bash
@@ -164,12 +178,12 @@ View all translations in an interactive table in your browser.
 translation-toolkit preview [options]
 ```
 
-| Option                | Description                                 | Default                    |
-| --------------------- | ------------------------------------------- | -------------------------- |
-| `-d, --dir <path>`    | Translations directory                      | auto-discover              |
-| `-p, --port <number>` | HTTP server port                            | `3456`                     |
-| `-w, --watch`         | Auto-reload on `.po` file changes           | off                        |
-| `-s, --static`        | Generate a standalone HTML file (no server) | off                        |
+| Option                | Description                                 | Default                          |
+| --------------------- | ------------------------------------------- | -------------------------------- |
+| `-d, --dir <path>`    | Translations directory                      | auto-discover                    |
+| `-p, --port <number>` | HTTP server port                            | `3456`                           |
+| `-w, --watch`         | Auto-reload on `.po` file changes           | off                              |
+| `-s, --static`        | Generate a standalone HTML file (no server) | off                              |
 | `-o, --output <path>` | Output file path (with `--static`)          | `translation-preview/index.html` |
 
 If the requested port is in use, the server automatically tries the next port (up to 20 attempts).
@@ -269,11 +283,11 @@ Exits with code 1 if differences found (useful for CI). Use `--exit-zero` for in
 
 All commands exit with code 0 on success. Some commands use non-zero exit codes to signal specific conditions:
 
-| Command    | Exit Code | Meaning                                   |
-| ---------- | --------- | ----------------------------------------- |
-| `validate` | `1`       | Validation errors found                   |
+| Command    | Exit Code | Meaning                                           |
+| ---------- | --------- | ------------------------------------------------- |
+| `validate` | `1`       | Validation errors found                           |
 | `diff`     | `1`       | Differences found (use `--exit-zero` to override) |
-| Any        | `1`       | Fatal error (missing file, invalid input) |
+| Any        | `1`       | Fatal error (missing file, invalid input)         |
 
 ## Auto-Discovery
 
@@ -436,7 +450,7 @@ git diff src/translations/
 
 ## Limitations
 
-- Only supports simple `msgid`/`msgstr` pairs (no plural forms `msgid_plural`/`msgstr[N]` — planned for Phase 2)
+- Plural forms in the browser preview are **read-only** (not editable via inline editing; edit via CSV round-trip instead)
 
 ## Roadmap
 
@@ -446,7 +460,7 @@ git diff src/translations/
 | 1.3   | DX improvements (dry-run, watch mode, port auto-detect)   | ✅ Done |
 | 1.4   | CI/CD mode (`--ci` flag, non-interactive, exit codes)     | ✅ Done |
 | 1.5   | Static preview export (`--static`) for GitHub Pages       | ✅ Done |
-| 2     | Plural forms (`msgid_plural` / `msgstr[N]`)               | Planned |
+| 2     | Plural forms (`msgid_plural` / `msgstr[N]`)               | ✅ Done |
 | 3     | Additional formats: JSON, XLIFF, Android XML              | Planned |
 | 4     | Custom validation rules                                   | Planned |
 

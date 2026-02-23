@@ -3,6 +3,26 @@
 All notable changes to **translation-toolkit** are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.5.0] — 2025-07-24
+
+### Added
+
+- **Plural forms support** — full `msgid_plural` / `msgstr[N]` pipeline across all commands (Phase 2)
+- **`parsePo()` returns `pluralEntries`** — new `Map<string, PluralEntry>` field with `{ msgid, msgid_plural, msgstr: string[], msgctxt? }` per plural key
+- **`writePo()` plural parameter** — optional 4th argument `pluralEntries` writes `msgid_plural` + `msgstr[0]`…`msgstr[N]` blocks
+- **`patchPoFile()` plural patching** — optional 4th argument `newPluralEntries` patches individual `msgstr[N]` forms in-place, preserving formatting
+- **Export emits `key[N]` rows** — plural entries appear as `key[0]`, `key[1]`, `key[2]` etc. in CSV output, one row per form
+- **Import detects `key[N]` pattern** — groups plural CSV rows back into `PluralEntry` objects and passes them to `patchPoFile()`
+- **Validate checks plurals** — new checks: `nplurals-mismatch`, `empty-plural-form`, `missing-plural-key`, `extra-plural-key`, variable consistency in plural forms
+- **Stats include plural counts** — per-language `pluralKeys`, `pluralForms`, `emptyPluralForms` counters; report shows "Plurals: X entries (Y forms, Z empty)"
+- **Preview shows plural rows** — plural entries displayed as `key[N]` rows with a "plural" badge and subtle accent background; plural rows are read-only (no inline editing)
+- **Static preview includes plurals** — `generateStaticPreview()` emits plural rows in the standalone HTML
+- **Diff includes plural entries** — `loadPoAsCsv()` now includes `key[N]` rows so CSV-vs-PO diff correctly compares plural translations
+
+### Tests
+
+- 126 tests across 27 suites (was 123 / 26 before diff plural tests; was 96 / 22 before v1.5.0)
+
 ## [1.4.1] — 2026-02-23
 
 ### Changed
@@ -114,6 +134,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Zero runtime dependencies
 - 31 tests across 12 suites
 
+[1.5.0]: https://github.com/qubuss/translation-toolkit/compare/v1.4.1...v1.5.0
+[1.4.1]: https://github.com/qubuss/translation-toolkit/compare/v1.4.0...v1.4.1
+[1.4.0]: https://github.com/qubuss/translation-toolkit/compare/v1.3.2...v1.4.0
 [1.3.2]: https://github.com/qubuss/translation-toolkit/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/qubuss/translation-toolkit/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/qubuss/translation-toolkit/compare/v1.2.1...v1.3.0

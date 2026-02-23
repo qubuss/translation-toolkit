@@ -28,6 +28,8 @@ bin/
 
 lib/
   poParser.js  → parsePo, writePo, patchPoFile, discoverPoFiles, escapePo, ...
+               parsePo returns { header, entries, pluralEntries }
+               PluralEntry = { msgid, msgid_plural, msgstr: string[], msgctxt? }
   export.js    → exportToCsv (core) + runExport (CLI runner)
   import.js    → importFromCsv, parseCsvContent (core) + runImport (CLI runner)
   validate.js  → validateTranslations (core) + runValidate (CLI runner)
@@ -36,13 +38,13 @@ lib/
   preview.js   → buildHtml, generateStaticPreview (core) + runPreview (CLI runner)
 
 test/
-  poParser.test.js   — Parser unit tests (~40 tests)
-  roundtrip.test.js  — Export → import → compare integration tests
+  poParser.test.js   — Parser unit tests + plural parse/write/patch tests (~60 tests)
+  roundtrip.test.js  — Export → import → compare + plural round-trip tests
   preview.test.js    — buildHtml, static preview, CLI --static tests
-  diff.test.js       — computeDiff and CLI exit code tests
+  diff.test.js       — computeDiff, CLI exit codes, plural diff tests
   fixtures/
-    en-US.po, pl-PL.po                     — 50 edge-case entries each
-    translations.csv, translations-modified.csv — matching CSV fixtures
+    en-US.po, pl-PL.po                     — 50 singular + 4 plural entries each
+    translations.csv, translations-modified.csv — matching CSV fixtures (incl. key[N] plural rows)
 ```
 
 ### Module Pattern
@@ -117,9 +119,20 @@ This file contains a ~1500-line HTML/CSS/JS template as a **JavaScript template 
 - The HTML template uses `${...}` interpolation for server-side data injection
 - `STATIC_MODE` flag controls client-side behavior (editing disabled, save bar hidden, client-side diff/CSV parser enabled)
 
-### 4. Plural Forms — Silently Skipped
+### 4. Plural Forms — `key[N]` Convention
 
-The parser (`parsePo()`) **ignores** `msgid_plural` and `msgstr[N]` lines. They are silently dropped during export/import. This is a **known limitation** documented in `plan.md` (Phase 2 / v1.5). Any code touching the parser must be aware of this gap.
+Since v1.5.0, plural forms are fully supported. `parsePo()` returns a `pluralEntries` Map alongside `entries`.
+
+In CSV, plural forms are represented as separate rows with `key[N]` suffixes: `1 file[0]`, `1 file[1]`, `1 file[2]`.
+
+On import, `key[N]` rows are detected via `PLURAL_KEY_RE = /^(.+)\[(\d+)\]$/` and grouped back into `PluralEntry` objects.
+
+**Key pitfalls:**
+
+- Plural entries in preview are **read-only** (not editable via inline editing)
+- The number of forms per language varies (English: 2, Polish: 3, Arabic: 6) — `maxForms` is computed across all languages
+- `patchPoFile()` patches individual `msgstr[N]` lines — it does NOT create new plural entries from scratch (D4 design decision)
+- `msgctxt` plural keys use `\x04` internally, `::` in CSV — same as singular entries
 
 ### 5. Two CLI Entry Points
 
@@ -138,19 +151,19 @@ npm test          # runs: node --test test/*.test.js
 ```
 
 - **Framework:** `node:test` with `describe`/`it`/`before`/`after` and `node:assert/strict`
-- **~96 tests across 22 suites** (update this count in CHANGELOG when tests change)
+- **~126 tests across 27 suites** (update this count in CHANGELOG when tests change)
 - **Temp dirs:** Tests create `.tmp*` directories in `test/`, cleaned up in `after()` hooks
 - **CLI tests:** Use `child_process.execFileSync` to test actual binary behavior and exit codes
 - **No mocking framework** — uses console.log capture (`process.stdout.write`) for output testing
 
 ### Test File Mapping
 
-| Feature area                     | Test file           | Tests via                       |
-| -------------------------------- | ------------------- | ------------------------------- |
-| PO parser, escaping, formatting  | `poParser.test.js`  | Direct function calls           |
-| Export → import round-trip       | `roundtrip.test.js` | Direct function calls           |
-| Preview HTML, static export      | `preview.test.js`   | Function calls + `execFileSync` |
-| Diff computation, CLI exit codes | `diff.test.js`      | Function calls + `execFileSync` |
+| Feature area                                              | Test file           | Tests via                       |
+| --------------------------------------------------------- | ------------------- | ------------------------------- |
+| PO parser, escaping, formatting, plural parse/write/patch | `poParser.test.js`  | Direct function calls           |
+| Export → import round-trip, plural round-trip             | `roundtrip.test.js` | Direct function calls           |
+| Preview HTML, static export                               | `preview.test.js`   | Function calls + `execFileSync` |
+| Diff computation, CLI exit codes, plural diff             | `diff.test.js`      | Function calls + `execFileSync` |
 
 **Note:** `preview.test.js` references the legacy CLI path (`bin/po-csv-tool.js`), while `diff.test.js` uses the new path (`bin/translation-toolkit.js`). This inconsistency exists but both work.
 
@@ -243,12 +256,12 @@ Test fixtures in `test/fixtures/` are the foundation of roundtrip tests. **When 
 
 ### Files
 
-| File                        | Purpose                                                                                                               |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `en-US.po`                  | English PO file — 50 edge-case entries (multiline, special chars, msgctxt, fuzzy, empty, long strings, HTML, Unicode) |
-| `pl-PL.po`                  | Polish PO file — matching entries with Polish translations                                                            |
-| `translations.csv`          | Pipe-delimited CSV — export of the above PO files                                                                     |
-| `translations-modified.csv` | Copy of `translations.csv` with intentional changes (for diff tests)                                                  |
+| File                        | Purpose                                                                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `en-US.po`                  | English PO file — 50 singular + 4 plural entries (multiline, special chars, msgctxt, fuzzy, empty, long strings, HTML, Unicode) |
+| `pl-PL.po`                  | Polish PO file — matching entries with Polish translations (3 plural forms per entry)                                           |
+| `translations.csv`          | Pipe-delimited CSV — export of the above PO files                                                                               |
+| `translations-modified.csv` | Copy of `translations.csv` with intentional changes (for diff tests)                                                            |
 
 ### Rules
 
@@ -318,7 +331,7 @@ msgstr "Zapisz"
 - Filename convention: `{locale}.po` — `en-US.po`, `pl-PL.po`
 - Short code extraction: `en-US` → `en`
 - Multiline: empty `msgid`/`msgstr` followed by continuation lines (`"..."`)
-- **Plural forms (`msgid_plural`, `msgstr[N]`) are NOT parsed** — silently skipped
+- **Plural forms** (`msgid_plural`, `msgstr[N]`): fully parsed since v1.5.0 — returned as `pluralEntries` Map
 
 ### CSV Files
 
@@ -331,6 +344,7 @@ with.newlines|"First line\nSecond line"|"Pierwsza\nDruga"
 
 - Delimiter: pipe `|` by default (configurable via `-D`)
 - `msgctxt` keys use `::` — e.g., `menu::Save` (internal `\x04` → display `::`)
+- Plural entries use `key[N]` suffixes — e.g., `1 file[0]`, `1 file[1]`, `1 file[2]`
 - Multi-line values wrapped in double quotes; internal quotes escaped as `""`
 - Custom CSV parser in `parseCsvContent()` — handles quoted fields with embedded newlines
 

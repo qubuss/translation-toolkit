@@ -9,7 +9,7 @@ const assert = require('node:assert/strict');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
-const { computeDiff, parseCsvFile } = require('../lib/diff');
+const { computeDiff, parseCsvFile, loadPoAsCsv } = require('../lib/diff');
 
 const CLI = path.resolve(__dirname, '..', 'bin', 'translation-toolkit.js');
 const FIXTURES = path.resolve(__dirname, 'fixtures');
@@ -71,5 +71,38 @@ describe('CLI diff exit codes', () => {
     );
 
     assert.ok(true, 'identical files should exit 0');
+  });
+});
+
+// ─── Plural forms in diff ──────────────────────────────
+
+describe('diff — plural forms', () => {
+  it('loadPoAsCsv includes plural entries as key[N] rows', () => {
+    const data = loadPoAsCsv(FIXTURES);
+    // Fixtures have plural entry "1 file" → key[0], key[1], key[2] etc.
+    const keys = [...data.rows.keys()];
+    const pluralKeys = keys.filter((k) => /\[\d+\]$/.test(k));
+    assert.ok(pluralKeys.length > 0, 'should have plural key[N] rows');
+  });
+
+  it('CSV-vs-PO diff reports no differences for matching data', () => {
+    const csvData = parseCsvFile(CSV_ORIGINAL, '|');
+    const poData = loadPoAsCsv(FIXTURES);
+    const result = computeDiff(csvData, poData);
+
+    // CSV and PO should be in sync (fixtures are consistent)
+    assert.strictEqual(result.entries.length, 0, 'CSV and PO should match for fixtures');
+  });
+
+  it('detects plural form changes between CSV files', () => {
+    const oldData = parseCsvFile(CSV_ORIGINAL, '|');
+    const newData = parseCsvFile(CSV_MODIFIED, '|');
+    const result = computeDiff(oldData, newData);
+
+    // translations-modified.csv has changed plural values
+    const pluralChanges = result.entries.filter(
+      (e) => /\[\d+\]$/.test(e.key)
+    );
+    assert.ok(pluralChanges.length > 0, 'should detect changes in plural key[N] rows');
   });
 });

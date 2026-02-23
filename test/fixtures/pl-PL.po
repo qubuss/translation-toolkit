@@ -224,3 +224,36 @@ msgstr "C:\\Użytkownicy\\jan\\Dokumenty\\plik.txt"
 
 msgid "url.value"
 msgstr "https://example.com/path?key=value&other=123#anchor"
+
+# ─── Plural forms ─────────────────────────────────────────
+
+msgid "%d file"
+msgid_plural "%d files"
+msgstr[0] "%d plik"
+msgstr[1] "%d pliki"
+msgstr[2] "%d plików"
+
+msgctxt "notifications"
+msgid "You have %d new message"
+msgid_plural "You have %d new messages"
+msgstr[0] "Masz %d nową wiadomość"
+msgstr[1] "Masz %d nowe wiadomości"
+msgstr[2] "Masz %d nowych wiadomości"
+
+msgid "%d item in cart"
+msgid_plural "%d items in cart"
+msgstr[0] "%d element w koszyku"
+msgstr[1] "%d elementy w koszyku"
+msgstr[2] "%d elementów w koszyku"
+
+msgid "%d day remaining"
+msgid_plural "%d days remaining"
+msgstr[0] ""
+"%d dzień pozostał\n"
+"w Twojej subskrypcji"
+msgstr[1] ""
+"%d dni pozostały\n"
+"w Twojej subskrypcji"
+msgstr[2] ""
+"%d dni pozostało\n"
+"w Twojej subskrypcji"
