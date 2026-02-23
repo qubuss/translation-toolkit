@@ -6,7 +6,7 @@ Wklej poniższy prompt w czacie nowego projektu (który ma pliki .po):
 
 ## PROMPT START
 
-Zainstaluj i przetestuj narzędzie `translation-toolkit@1.5.0` (npm) na tym projekcie.
+Zainstaluj i przetestuj narzędzie `translation-toolkit@1.5.1` (npm) na tym projekcie.
 Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj raport.
 
 > Komendy: `export`, `import`, `preview`, `validate`, `stats`, `diff`
@@ -14,8 +14,8 @@ Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj 
 ### 0. Instalacja
 
 ```bash
-npm install -g translation-toolkit@1.5.0
-translation-toolkit --version   # powinno wypisać 1.5.0
+npm install -g translation-toolkit@1.5.1
+translation-toolkit --version   # powinno wypisać 1.5.1
 ```
 
 ### 1. Odkrywanie plików .po
@@ -58,6 +58,30 @@ Checklist:
 - [ ] Klucze z `msgctxt` mają separator `::` (np. `menu::Save`)
 - [ ] Wieloliniowe wartości są w jednej komórce (w cudzysłowach CSV)
 - [ ] Znaki specjalne (`\"`, `\t`, `\n`) poprawnie wyeksportowane
+
+**2a. Test EXPORT z custom delimiterem (`-D`) [v1.5.1]:**
+
+```bash
+# Export z delimiterem przecinkowym
+translation-toolkit export --dir "$PO_DIR" -o /tmp/tt-comma-export.csv -D ","
+head -3 /tmp/tt-comma-export.csv
+```
+
+Checklist:
+
+- [ ] Nagłówek: `key,<lang1>,<lang2>,...` (przecinek zamiast pipe)
+- [ ] Wartości zawierające przecinki są w cudzysłowach
+- [ ] Round-trip: import z `-D ","` → re-export → identyczny CSV
+
+```bash
+cp -r "$PO_DIR" /tmp/tt-comma-reimport
+translation-toolkit import /tmp/tt-comma-export.csv --dir /tmp/tt-comma-reimport -D ","
+translation-toolkit export --dir /tmp/tt-comma-reimport -o /tmp/tt-comma-reexport.csv -D ","
+diff /tmp/tt-comma-export.csv /tmp/tt-comma-reexport.csv
+echo "Exit code: $?"   # 0 = identyczne
+```
+
+- [ ] Round-trip z comma delimiterem jest bezstratny (diff pusty)
 
 ### 3. Test IMPORT --dry-run
 
@@ -117,6 +141,40 @@ Checklist:
 - [ ] **[v1.3.1 FIX]** Komentarze (`#.`, `#:`, `#,`) zachowane byte-for-byte
 - [ ] **[v1.4.0 FIX]** Tagi `--ci` w `--help` są widoczne (`translation-toolkit --help | grep ci`)
 
+### 4a. Test IMPORT --merge [v1.5.1]
+
+W trybie domyślnym (replace) import **usuwa** klucze z `.po` których nie ma w CSV.
+W trybie `--merge` zachowuje istniejące klucze i tylko dodaje/aktualizuje dane z CSV.
+
+```bash
+# Przygotuj CSV z mniejszą liczbą kluczy (symulacja częściowej aktualizacji)
+cp /tmp/tt-test-export.csv /tmp/tt-merge-test.csv
+# Usuń wiersze 3-5 (kilka kluczy "zniknie" z CSV)
+sed -i '' '3,5d' /tmp/tt-merge-test.csv 2>/dev/null || \
+sed -i  '3,5d' /tmp/tt-merge-test.csv
+
+# Test replace mode (domyślny) — klucze powinny ZNIKNĄĆ
+cp -r "$PO_DIR" /tmp/tt-replace-test
+translation-toolkit import /tmp/tt-merge-test.csv --dir /tmp/tt-replace-test
+translation-toolkit export --dir /tmp/tt-replace-test -o /tmp/tt-replace-result.csv
+REPLACE_KEYS=$(wc -l < /tmp/tt-replace-result.csv | tr -d ' ')
+echo "Replace mode keys: $REPLACE_KEYS"
+
+# Test merge mode — klucze powinny POZOSTAĆ
+cp -r "$PO_DIR" /tmp/tt-merge-actual
+translation-toolkit import /tmp/tt-merge-test.csv --dir /tmp/tt-merge-actual --merge
+translation-toolkit export --dir /tmp/tt-merge-actual -o /tmp/tt-merge-result.csv
+MERGE_KEYS=$(wc -l < /tmp/tt-merge-result.csv | tr -d ' ')
+echo "Merge mode keys: $MERGE_KEYS"
+```
+
+Checklist:
+
+- [ ] Replace mode: `$REPLACE_KEYS` < oryginalna liczba kluczy (klucze usunięte)
+- [ ] Merge mode: `$MERGE_KEYS` == oryginalna liczba kluczy (klucze zachowane)
+- [ ] Merge mode: zmienione wartości w CSV są zaktualizowane w `.po`
+- [ ] Merge mode: klucze nieobecne w CSV mają oryginalne wartości
+
 ### 5. Test VALIDATE
 
 ```bash
@@ -129,6 +187,7 @@ Checklist:
 - [ ] Wykrywa puste `msgstr`
 - [ ] Wykrywa niezgodność zmiennych (np. `{{name}}`, `%s`, `{0}`)
 - [ ] Klucze z `msgctxt` wyświetlają się jako `kontekst::klucz` (nie znak `\x04`)
+- [ ] Exit code = 1 jeśli są błędy (errors), exit code = 0 jeśli brak błędów
 - [ ] Raport jest czytelny i sensowny
 
 ### 6. Test STATS
@@ -250,12 +309,12 @@ Checklist:
 
 ```bash
 translation-toolkit preview --dir "$PO_DIR" --static
-ls -la translation-preview.html
+ls -la translation-preview/index.html
 ```
 
 Checklist:
 
-- [ ] Generuje plik `translation-preview.html` bez błędów
+- [ ] Generuje plik `translation-preview/index.html` bez błędów
 - [ ] Plik zawiera `STATIC_MODE = true`
 - [ ] Wszystkie dane tłumaczeń osadzone w HTML
 - [ ] Tabela, walidacja, statystyki, diff — wszystkie zakładki obecne
@@ -554,7 +613,7 @@ Dla każdej anomalii zanotuj:
 Wygeneruj raport **dokładnie** w poniższym formacie:
 
 ```
-## Translation Toolkit v1.5.0 — Test Report
+## Translation Toolkit v1.5.1 — Test Report
 
 **Projekt**: [nazwa projektu]
 **Pliki .po**: X plików, Y języków
@@ -568,8 +627,10 @@ Wygeneruj raport **dokładnie** w poniższym formacie:
 | 0 | Instalacja | ✅/❌ | wersja: |
 | 1 | Export (po→CSV) | ✅/❌ | X kluczy × Y języków |
 | 2 | Import round-trip (CSV diff) | ✅/❌ | diff pusty? |
+| 2a | Export `-D` comma delimiter | ✅/❌ | round-trip z comma bezstratny? |
 | 3 | Import --dry-run | ✅/❌ | pliki niezmienione? raport poprawny? |
 | 4 | Import format preservation (.po diff) | ✅/❌ | pliki .po bez zmian formatu? |
+| 4a | Import --merge mode | ✅/❌ | klucze zachowane? zmiany zaktualizowane? |
 | 5 | Validate | ✅/❌ | X errors, Y warnings |
 | 6 | Stats | ✅/❌ | overall coverage: X% |
 | 7a | Diff (CSV vs CSV) | ✅/❌ | wykrywa zmiany/dodane/usunięte? |
@@ -596,6 +657,9 @@ Wygeneruj raport **dokładnie** w poniższym formacie:
 | **R8** | **Plural import round-trip** | ✅/❌ | v1.5.0 new: key[N] → msgstr[N] |
 | **R9** | **Plural validate checks** | ✅/❌ | v1.5.0 new: nplurals, empty forms |
 | **R10** | **Plural preview read-only** | ✅/❌ | v1.5.0 new: badge, no editing |
+| **R11** | **Custom delimiter `-D` round-trip** | ✅/❌ | v1.5.1 new: comma/tab export→import |
+| **R12** | **Import `--merge` mode** | ✅/❌ | v1.5.1 new: keeps existing keys |
+| **R13** | **Validate exit code** | ✅/❌ | v1.5.1 new: exit 1 on errors, 0 otherwise |
 
 ### Anomalie
 

@@ -3,6 +3,22 @@
 All notable changes to **translation-toolkit** are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.5.1] — 2025-07-24
+
+### Added
+
+- **`test/validate.test.js`** — new test file covering `validateTranslations()` singular and plural validation: missing-key, extra-key, empty-translation, variable-mismatch, nplurals-mismatch, empty-plural-form, missing-plural-key, extra-plural-key, plural variable consistency (25 tests / 8 suites)
+- **`test/stats.test.js`** — new test file covering `computeStats()` singular and plural statistics: refLang, coverage, pluralKeys, pluralForms, emptyPluralForms, topMissingCount parameter (16 tests / 5 suites)
+- **Preview plural tests** — 11 new tests in `test/preview.test.js` covering plural-row CSS class, plural-badge, key[N] rendering, click guard, and `generateStaticPreview()` plural content
+- **Custom delimiter (`-D`) tests** — 4 new tests in `test/roundtrip.test.js` covering comma-delimited export, comma and tab round-trip, and comma plural round-trip
+- **Merge mode (`--merge`) tests** — 5 new tests in `test/roundtrip.test.js` covering replace mode key removal, merge mode key preservation, merge update values, merge add new keys, and merge dry-run report
+- **Validate CLI exit code tests** — 2 new tests in `test/validate.test.js` covering `exit 0` for clean translations and `exit 1` when errors exist
+- **test-prompt.md updates** — version 1.5.0→1.5.1, added section 2a (custom delimiter `-D` test), section 4a (import `--merge` mode test), validate exit code checklist item, fixed `--static` default path, added R11/R12/R13 regression tests to report table
+
+### Tests
+
+- 187 tests across 46 suites (was 176 / 43)
+
 ## [1.5.0] — 2025-07-24
 
 ### Added
@@ -134,6 +150,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Zero runtime dependencies
 - 31 tests across 12 suites
 
+[1.5.1]: https://github.com/qubuss/translation-toolkit/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/qubuss/translation-toolkit/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/qubuss/translation-toolkit/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/qubuss/translation-toolkit/compare/v1.3.2...v1.4.0

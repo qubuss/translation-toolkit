@@ -256,3 +256,98 @@ describe('static HTML content', () => {
     );
   });
 });
+
+// ─── buildHtml — plural rows ─────────────────────────────
+
+describe('buildHtml — plural rows', () => {
+  const pluralRows = [
+    { key: 'hello', translations: { en: 'Hello', pl: 'Cześć' } },
+    { key: '%d cat[0]', translations: { en: '%d cat', pl: '%d kot' }, isPlural: true, pluralForm: 0 },
+    { key: '%d cat[1]', translations: { en: '%d cats', pl: '%d koty' }, isPlural: true, pluralForm: 1 },
+    { key: '%d cat[2]', translations: { en: '', pl: '%d kotów' }, isPlural: true, pluralForm: 2 },
+  ];
+  const languages = ['en', 'pl'];
+  const validationResult = { issues: [], refLang: 'en', totalKeys: 1, totalPluralKeys: 1 };
+  const statsResult = {
+    refLang: 'en',
+    refKeyCount: 1,
+    languages: ['en', 'pl'],
+    langStats: [
+      { lang: 'en', total: 1, translated: 1, missing: 0, coverage: 100, topMissing: [], pluralKeys: 1, pluralForms: 3, emptyPluralForms: 0 },
+      { lang: 'pl', total: 1, translated: 1, missing: 0, coverage: 100, topMissing: [], pluralKeys: 1, pluralForms: 3, emptyPluralForms: 0 },
+    ],
+    overallCoverage: 100,
+  };
+
+  it('adds plural-row CSS class to plural entries', () => {
+    const html = buildHtml(pluralRows, languages, FIXTURES, validationResult, statsResult, true);
+    assert.ok(html.includes('plural-row'), 'should have plural-row CSS class');
+  });
+
+  it('adds plural badge to plural rows', () => {
+    const html = buildHtml(pluralRows, languages, FIXTURES, validationResult, statsResult, true);
+    assert.ok(html.includes('plural-badge'), 'should have plural-badge class');
+    assert.ok(html.includes('plural'), 'should contain "plural" label text');
+  });
+
+  it('renders plural key with [N] suffix', () => {
+    const html = buildHtml(pluralRows, languages, FIXTURES, validationResult, statsResult, true);
+    assert.ok(html.includes('%d cat[0]'), 'should render key with [0] suffix');
+    assert.ok(html.includes('%d cat[1]'), 'should render key with [1] suffix');
+    assert.ok(html.includes('%d cat[2]'), 'should render key with [2] suffix');
+  });
+
+  it('renders plural translations correctly', () => {
+    const html = buildHtml(pluralRows, languages, FIXTURES, validationResult, statsResult, true);
+    assert.ok(html.includes('%d kot'), 'should contain Polish singular');
+    assert.ok(html.includes('%d koty'), 'should contain Polish form 1');
+    assert.ok(html.includes('%d kotów'), 'should contain Polish form 2');
+  });
+
+  it('contains plural-row click guard in JavaScript', () => {
+    const html = buildHtml(pluralRows, languages, FIXTURES, validationResult, statsResult, false);
+    assert.ok(
+      html.includes('plural-row') && html.includes('closest'),
+      'should have plural-row click guard using closest()'
+    );
+  });
+});
+
+// ─── generateStaticPreview — plural content ──────────────
+
+describe('generateStaticPreview — plural entries from fixtures', () => {
+  let html;
+
+  before(async () => {
+    const outPath = path.join(TMP, 'plural-preview.html');
+    await generateStaticPreview(FIXTURES, outPath);
+    html = fs.readFileSync(outPath, 'utf-8');
+  });
+
+  it('includes plural rows from fixture .po files', () => {
+    // Fixture has "%d files" plural entry → should appear as key[0], key[1]
+    assert.ok(html.includes('[0]'), 'should have [0] plural form suffix');
+    assert.ok(html.includes('[1]'), 'should have [1] plural form suffix');
+  });
+
+  it('includes plural-row CSS class in generated preview', () => {
+    assert.ok(html.includes('plural-row'), 'should have plural-row CSS class');
+  });
+
+  it('includes plural-badge in generated preview', () => {
+    assert.ok(html.includes('plural-badge'), 'should have plural-badge in generated HTML');
+  });
+
+  it('includes Polish plural forms from fixtures', () => {
+    // pl-PL.po has "%d pliki" as a plural form
+    assert.ok(html.includes('%d pliki') || html.includes('%d plik'), 'should contain Polish plural translations');
+  });
+
+  it('includes plural-row styling in CSS', () => {
+    // The CSS should style tr.plural-row
+    assert.ok(
+      html.includes('tr.plural-row') || html.includes('.plural-row'),
+      'CSS should style plural-row class'
+    );
+  });
+});
