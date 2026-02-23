@@ -38,13 +38,16 @@ lib/
   preview.js   → buildHtml, generateStaticPreview (core) + runPreview (CLI runner)
 
 test/
-  poParser.test.js   — Parser unit tests + plural parse/write/patch tests (~60 tests)
-  roundtrip.test.js  — Export → import → compare + plural round-trip tests
-  preview.test.js    — buildHtml, static preview, CLI --static tests
-  diff.test.js       — computeDiff, CLI exit codes, plural diff tests
+  poParser.test.js    — Parser unit tests + plural parse/write/patch tests (~60 tests)
+  roundtrip.test.js   — Export → import → compare + plural round-trip tests
+  preview.test.js     — buildHtml, static preview, CLI --static tests
+  diff.test.js        — computeDiff, CLI exit codes, plural diff tests
+  integration.test.js — End-to-end tests on 3-language e-commerce project (28 tests)
   fixtures/
     en-US.po, pl-PL.po                     — 50 singular + 4 plural entries each
     translations.csv, translations-modified.csv — matching CSV fixtures (incl. key[N] plural rows)
+  integration-project/translations/
+    en-US.po, pl-PL.po, de-DE.po           — 104 singular + 8 plural entries, 3 languages, 7 fuzzy per lang
 ```
 
 ### Module Pattern
@@ -151,7 +154,7 @@ npm test          # runs: node --test test/*.test.js
 ```
 
 - **Framework:** `node:test` with `describe`/`it`/`before`/`after` and `node:assert/strict`
-- **~204 tests across 50 suites** (update this count in CHANGELOG when tests change)
+- **~232 tests across 58 suites** (update this count in CHANGELOG when tests change)
 - **Temp dirs:** Tests create `.tmp*` directories in `test/`, cleaned up in `after()` hooks
 - **CLI tests:** Use `child_process.execFileSync` to test actual binary behavior and exit codes
 - **No mocking framework** — uses console.log capture (`process.stdout.write`) for output testing
@@ -160,9 +163,10 @@ npm test          # runs: node --test test/*.test.js
 
 | Feature area                                              | Test file           | Tests via                       |
 | --------------------------------------------------------- | ------------------- | ------------------------------- |
-| PO parser, escaping, formatting, plural parse/write/patch | `poParser.test.js`  | Direct function calls           |
-| Export → import round-trip, plural round-trip             | `roundtrip.test.js` | Direct function calls           |
-| Preview HTML, static export                               | `preview.test.js`   | Function calls + `execFileSync` |
+| PO parser, escaping, formatting, plural parse/write/patch | `poParser.test.js`    | Direct function calls           |
+| Export → import round-trip, plural round-trip             | `roundtrip.test.js`   | Direct function calls           |
+| Preview HTML, static export                               | `preview.test.js`     | Function calls + `execFileSync` |
+| 3-language e2e (parse, export, import, validate, stats)   | `integration.test.js` | Direct + `execFileSync`         |
 | Diff computation, CLI exit codes, plural diff             | `diff.test.js`      | Function calls + `execFileSync` |
 
 **Note:** `preview.test.js` references the legacy CLI path (`bin/po-csv-tool.js`), while `diff.test.js` uses the new path (`bin/translation-toolkit.js`). This inconsistency exists but both work.

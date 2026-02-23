@@ -1,0 +1,535 @@
+# Polish translations for ShopFront e-commerce platform
+# Copyright (C) 2026 ShopFront Inc.
+# This file is distributed under the MIT license.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: shopfront 2.4.0\n"
+"Report-Msgid-Bugs-To: translations@shopfront.example.com\n"
+"POT-Creation-Date: 2026-01-15 10:30+0100\n"
+"PO-Revision-Date: 2026-02-18 09:45+0100\n"
+"Last-Translator: Anna Kowalska <anna@shopfront.example.com>\n"
+"Language-Team: Polish <pl@shopfront.example.com>\n"
+"Language: pl-PL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 "
+"&& (n%100<12 || n%100>14) ? 1 : 2);\n"
+
+# ═══════════════════════════════════════════════════════════
+# Navigation & Menu
+# ═══════════════════════════════════════════════════════════
+
+msgid "nav.home"
+msgstr "Strona główna"
+
+msgid "nav.products"
+msgstr "Produkty"
+
+msgid "nav.categories"
+msgstr "Kategorie"
+
+msgid "nav.cart"
+msgstr "Koszyk"
+
+msgid "nav.account"
+msgstr "Moje konto"
+
+msgid "nav.help"
+msgstr "Pomoc i wsparcie"
+
+msgid "nav.logout"
+msgstr "Wyloguj się"
+
+# ═══════════════════════════════════════════════════════════
+# Authentication
+# ═══════════════════════════════════════════════════════════
+
+#: src/auth/LoginForm.tsx:15
+msgid "auth.login.title"
+msgstr "Zaloguj się na swoje konto"
+
+#: src/auth/LoginForm.tsx:28
+msgid "auth.login.email"
+msgstr "Adres e-mail"
+
+#: src/auth/LoginForm.tsx:35
+msgid "auth.login.password"
+msgstr "Hasło"
+
+#: src/auth/LoginForm.tsx:42
+msgid "auth.login.submit"
+msgstr "Zaloguj się"
+
+#: src/auth/LoginForm.tsx:50
+msgid "auth.login.forgot"
+msgstr "Zapomniałeś hasła?"
+
+#: src/auth/RegisterForm.tsx:12
+msgid "auth.register.title"
+msgstr "Utwórz nowe konto"
+
+#: src/auth/RegisterForm.tsx:60
+#, fuzzy
+msgid "auth.register.terms"
+msgstr ""
+"Tworząc konto, akceptujesz nasz Regulamin "
+"oraz Politykę Prywatności."
+
+#: src/auth/ResetPassword.tsx:18
+msgid "auth.reset.title"
+msgstr "Zresetuj hasło"
+
+#: src/auth/ResetPassword.tsx:30
+msgid "auth.reset.instructions"
+msgstr ""
+"Wpisz adres e-mail powiązany z Twoim kontem, "
+"a wyślemy Ci link do zresetowania hasła."
+
+# ═══════════════════════════════════════════════════════════
+# Product listing & details
+# ═══════════════════════════════════════════════════════════
+
+#. This appears on the product card when out of stock
+#: src/products/ProductCard.tsx:88
+msgid "product.out_of_stock"
+msgstr "Brak w magazynie"
+
+#: src/products/ProductCard.tsx:92
+msgid "product.add_to_cart"
+msgstr "Dodaj do koszyka"
+
+#: src/products/ProductDetail.tsx:45
+msgid "product.description"
+msgstr "Opis"
+
+#: src/products/ProductDetail.tsx:52
+msgid "product.specifications"
+msgstr "Specyfikacja"
+
+#: src/products/ProductDetail.tsx:59
+msgid "product.reviews"
+msgstr "Opinie klientów"
+
+#. Shown when a product has no reviews yet
+msgid "product.no_reviews"
+msgstr "Brak opinii. Bądź pierwszą osobą, która oceni ten produkt!"
+
+#: src/products/ProductDetail.tsx:110
+#, c-format
+msgid "product.price"
+msgstr "Cena: %s"
+
+#: src/products/ProductDetail.tsx:115
+#, python-brace-format
+msgid "product.sku"
+msgstr "SKU: {sku_number}"
+
+# ─── Product with HTML content ────────────────────────────
+
+msgid "product.sale_badge"
+msgstr "<span class=\"badge sale\">WYPRZEDAŻ</span>"
+
+msgid "product.rich_description"
+msgstr ""
+"<div class=\"product-info\">\n"
+"  <h3>Najwyższa jakość</h3>\n"
+"  <p>Ręcznie wykonane ze <strong>skóry naturalnej</strong> "
+"i <em>stali nierdzewnej</em>.</p>\n"
+"  <ul>\n"
+"    <li>Wodoodporne</li>\n"
+"    <li>5-letnia gwarancja</li>\n"
+"  </ul>\n"
+"</div>"
+
+# ═══════════════════════════════════════════════════════════
+# Shopping Cart
+# ═══════════════════════════════════════════════════════════
+
+msgid "cart.title"
+msgstr "Twój koszyk"
+
+msgid "cart.empty"
+msgstr "Twój koszyk jest pusty"
+
+#, python-brace-format
+msgid "cart.subtotal"
+msgstr "Suma częściowa: {amount}"
+
+#, python-brace-format
+msgid "cart.shipping"
+msgstr "Dostawa: {amount}"
+
+#, python-brace-format
+msgid "cart.total"
+msgstr "Razem: {amount}"
+
+msgid "cart.checkout"
+msgstr "Przejdź do kasy"
+
+msgid "cart.continue_shopping"
+msgstr "Kontynuuj zakupy"
+
+msgid "cart.remove_item"
+msgstr "Usuń"
+
+#, python-brace-format
+msgid "cart.quantity"
+msgstr "Ilość: {quantity}"
+
+# ═══════════════════════════════════════════════════════════
+# Checkout & Orders
+# ═══════════════════════════════════════════════════════════
+
+msgid "checkout.title"
+msgstr "Podsumowanie zamówienia"
+
+msgid "checkout.shipping_address"
+msgstr "Adres dostawy"
+
+msgid "checkout.billing_address"
+msgstr "Adres rozliczeniowy"
+
+msgid "checkout.payment_method"
+msgstr "Metoda płatności"
+
+msgid "checkout.place_order"
+msgstr "Złóż zamówienie"
+
+#. Shown after successful order placement
+#: src/checkout/OrderConfirmation.tsx:22
+#, python-brace-format
+msgid "checkout.order_confirmed"
+msgstr ""
+"Twoje zamówienie #{order_id} zostało potwierdzone!\n"
+"Potwierdzenie otrzymasz na adres {email}."
+
+#: src/checkout/OrderConfirmation.tsx:40
+msgid "checkout.track_order"
+msgstr "Śledź swoje zamówienie"
+
+# ═══════════════════════════════════════════════════════════
+# User Account & Profile
+# ═══════════════════════════════════════════════════════════
+
+msgid "account.profile"
+msgstr "Profil"
+
+msgid "account.orders"
+msgstr "Historia zamówień"
+
+msgid "account.settings"
+msgstr "Ustawienia konta"
+
+msgid "account.addresses"
+msgstr "Zapisane adresy"
+
+msgid "account.wishlist"
+msgstr "Lista życzeń"
+
+#, fuzzy
+msgid "account.notifications"
+msgstr "Preferencje powiadomień"
+
+#, fuzzy
+msgid "account.delete"
+msgstr "Usuń konto"
+
+#. Warning shown before account deletion
+msgid "account.delete_warning"
+msgstr ""
+"Ta operacja jest nieodwracalna. Wszystkie Twoje dane, "
+"w tym historia zamówień, zapisane adresy i lista życzeń "
+"zostaną trwale usunięte."
+
+# ═══════════════════════════════════════════════════════════
+# Search
+# ═══════════════════════════════════════════════════════════
+
+msgid "search.placeholder"
+msgstr "Szukaj produktów..."
+
+#, python-brace-format
+msgid "search.results_for"
+msgstr "Wyniki wyszukiwania dla \"{query}\""
+
+msgid "search.no_results"
+msgstr "Nie znaleziono produktów pasujących do wyszukiwania."
+
+msgid "search.filters"
+msgstr "Filtry"
+
+msgid "search.sort_by"
+msgstr "Sortuj według"
+
+msgid "search.sort.relevance"
+msgstr "Trafność"
+
+msgid "search.sort.price_asc"
+msgstr "Cena: od najniższej"
+
+msgid "search.sort.price_desc"
+msgstr "Cena: od najwyższej"
+
+msgid "search.sort.newest"
+msgstr "Najnowsze"
+
+# ═══════════════════════════════════════════════════════════
+# Validation & Error messages
+# ═══════════════════════════════════════════════════════════
+
+msgid "error.generic"
+msgstr "Coś poszło nie tak. Spróbuj ponownie później."
+
+msgid "error.not_found"
+msgstr "Nie znaleziono strony"
+
+msgid "error.network"
+msgstr "Błąd sieci. Sprawdź połączenie internetowe."
+
+#, python-brace-format
+msgid "error.field_required"
+msgstr "Pole \"{field}\" jest wymagane."
+
+#, python-brace-format
+msgid "error.field_too_long"
+msgstr "Pole \"{field}\" może mieć maksymalnie {max} znaków."
+
+msgid "error.invalid_email"
+msgstr "Podaj prawidłowy adres e-mail."
+
+msgid "error.password_mismatch"
+msgstr "Hasła nie są zgodne."
+
+#, python-brace-format
+msgid "error.min_password"
+msgstr "Hasło musi mieć co najmniej {min} znaków."
+
+# ═══════════════════════════════════════════════════════════
+# Contextual entries (msgctxt)
+# ═══════════════════════════════════════════════════════════
+
+msgctxt "header"
+msgid "title"
+msgstr "ShopFront — Twój sklep internetowy"
+
+msgctxt "footer"
+msgid "title"
+msgstr "ShopFront Sp. z o.o. © 2026"
+
+msgctxt "product.status"
+msgid "active"
+msgstr "Aktywny"
+
+msgctxt "order.status"
+msgid "active"
+msgstr "W realizacji"
+
+msgctxt "button"
+msgid "save"
+msgstr "Zapisz zmiany"
+
+msgctxt "toast"
+msgid "save"
+msgstr "Zmiany zapisane pomyślnie!"
+
+# ═══════════════════════════════════════════════════════════
+# Special characters & edge cases
+# ═══════════════════════════════════════════════════════════
+
+msgid "special.quotes"
+msgstr "Ona powiedziała: \"Cześć\" a on odpowiedział: \"Hej!\""
+
+msgid "special.backslash"
+msgstr "C:\\Users\\Documents\\exports\\raport.csv"
+
+msgid "special.pipes"
+msgstr "Opcja A | Opcja B | Opcja C"
+
+msgid "special.tabs"
+msgstr "Kolumna1\tKolumna2\tKolumna3"
+
+msgid "special.mixed"
+msgstr "Linia 1\nLinia 2\tz tabulacją\nLinia 3 z \"cudzysłowami\""
+
+# ─── Unicode ──────────────────────────────────────────────
+
+msgid "unicode.polish"
+msgstr "ąćęłńóśźż ĄĆĘŁŃÓŚŹŻ"
+
+msgid "unicode.german"
+msgstr "äöüß ÄÖÜ"
+
+msgid "unicode.emoji"
+msgstr "🛒 Zakupy 🎉 Wyprzedaż 💰 Płatność"
+
+msgid "unicode.math"
+msgstr "Razem ≥ 0,00 zł • Rabat ≤ 50%"
+
+msgid "unicode.arrows"
+msgstr "← Wstecz | Strona główna → Dalej →"
+
+# ═══════════════════════════════════════════════════════════
+# Fuzzy entries (needs review)
+# ═══════════════════════════════════════════════════════════
+
+#. Machine-translated, needs human review
+#, fuzzy
+msgid "promo.summer_sale"
+msgstr "Letnia wyprzedaż — do 50% zniżki na wybrane produkty!"
+
+#, fuzzy, c-format
+msgid "promo.coupon_applied"
+msgstr "Kupon \"%s\" zastosowany — oszczędzasz %s!"
+
+#, fuzzy
+#| msgid "footer.copyright.old"
+msgid "footer.copyright"
+msgstr "© 2026 ShopFront Sp. z o.o. Wszelkie prawa zastrzeżone."
+
+#, fuzzy
+#| msgid "Return Policy"
+msgid "footer.return_policy"
+msgstr "Polityka zwrotów i reklamacji"
+
+# ═══════════════════════════════════════════════════════════
+# Common UI elements
+# ═══════════════════════════════════════════════════════════
+
+msgid "common.yes"
+msgstr "Tak"
+
+msgid "common.no"
+msgstr "Nie"
+
+msgid "common.cancel"
+msgstr "Anuluj"
+
+msgid "common.confirm"
+msgstr "Potwierdź"
+
+msgid "common.close"
+msgstr "Zamknij"
+
+msgid "common.loading"
+msgstr "Ładowanie..."
+
+msgid "common.save"
+msgstr "Zapisz"
+
+msgid "common.delete"
+msgstr "Usuń"
+
+msgid "common.edit"
+msgstr "Edytuj"
+
+msgid "common.back"
+msgstr "Wstecz"
+
+# ─── Empty entry (untranslated) ──────────────────────────
+
+msgid "common.coming_soon"
+msgstr ""
+
+# ═══════════════════════════════════════════════════════════
+# Notifications & Toasts
+# ═══════════════════════════════════════════════════════════
+
+msgid "toast.item_added"
+msgstr "Dodano do koszyka"
+
+msgid "toast.item_removed"
+msgstr "Usunięto z koszyka"
+
+#, python-brace-format
+msgid "toast.welcome_back"
+msgstr "Witaj ponownie, {name}!"
+
+msgid "toast.password_changed"
+msgstr "Twoje hasło zostało zmienione."
+
+# ═══════════════════════════════════════════════════════════
+# Long strings (format preservation test)
+# ═══════════════════════════════════════════════════════════
+
+msgid "legal.privacy_excerpt"
+msgstr "Szanujemy Twoją prywatność. Niniejsza Polityka Prywatności opisuje, w jaki sposób ShopFront Sp. z o.o. zbiera, wykorzystuje i udostępnia informacje o Tobie, gdy korzystasz z naszych stron internetowych, aplikacji mobilnych i innych usług online lub gdy w inny sposób z nami współpracujesz. Korzystając z naszych Usług, wyrażasz zgodę na gromadzenie, wykorzystywanie, ujawnianie i procedury opisane w niniejszej Polityce Prywatności."
+
+msgid "legal.cookie_notice"
+msgstr ""
+"Ta strona używa plików cookie w celu poprawy jakości przeglądania.\n"
+"\n"
+"Niezbędne cookies: Wymagane do podstawowego działania strony.\n"
+"Cookies analityczne: Pomagają nam zrozumieć, jak użytkownicy korzystają ze strony.\n"
+"Cookies marketingowe: Używane do wyświetlania trafnych reklam.\n"
+"\n"
+"Możesz zarządzać swoimi preferencjami w Ustawienia > Prywatność."
+
+# ═══════════════════════════════════════════════════════════
+# Plural forms (nplurals=3 for Polish)
+# ═══════════════════════════════════════════════════════════
+
+#, c-format
+msgid "%d product found"
+msgid_plural "%d products found"
+msgstr[0] "%d produkt znaleziony"
+msgstr[1] "%d produkty znalezione"
+msgstr[2] "%d produktów znalezionych"
+
+#, c-format
+msgid "%d item in your cart"
+msgid_plural "%d items in your cart"
+msgstr[0] "%d przedmiot w koszyku"
+msgstr[1] "%d przedmioty w koszyku"
+msgstr[2] "%d przedmiotów w koszyku"
+
+#, c-format
+msgid "%d review"
+msgid_plural "%d reviews"
+msgstr[0] "%d opinia"
+msgstr[1] "%d opinie"
+msgstr[2] "%d opinii"
+
+#, c-format
+msgid "%d day left"
+msgid_plural "%d days left"
+msgstr[0] "%d dzień pozostał"
+msgstr[1] "%d dni pozostały"
+msgstr[2] "%d dni pozostało"
+
+#, c-format
+msgid "%d order placed"
+msgid_plural "%d orders placed"
+msgstr[0] "%d zamówienie złożone"
+msgstr[1] "%d zamówienia złożone"
+msgstr[2] "%d zamówień złożonych"
+
+#, c-format
+msgctxt "notifications"
+msgid "%d new notification"
+msgid_plural "%d new notifications"
+msgstr[0] "%d nowe powiadomienie"
+msgstr[1] "%d nowe powiadomienia"
+msgstr[2] "%d nowych powiadomień"
+
+#, c-format
+msgid "%d photo uploaded"
+msgid_plural "%d photos uploaded"
+msgstr[0] "%d zdjęcie przesłane"
+msgstr[1] "%d zdjęcia przesłane"
+msgstr[2] "%d zdjęć przesłanych"
+
+#. Multiline plural with complex formatting
+#, c-format
+msgid "%d item requires attention"
+msgid_plural "%d items require attention"
+msgstr[0] ""
+"%d przedmiot wymaga uwagi\n"
+"w Twoim ostatnim zamówieniu"
+msgstr[1] ""
+"%d przedmioty wymagają uwagi\n"
+"w Twoich ostatnich zamówieniach"
+msgstr[2] ""
+"%d przedmiotów wymaga uwagi\n"
+"w Twoich ostatnich zamówieniach"
