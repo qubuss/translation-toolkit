@@ -351,3 +351,34 @@ describe('generateStaticPreview — plural entries from fixtures', () => {
     );
   });
 });
+
+// ─── Fuzzy badge in preview ──────────────────────────────
+
+describe('generateStaticPreview — fuzzy badge', () => {
+  let html;
+
+  before(async () => {
+    const outPath = path.join(TMP, 'fuzzy-preview.html');
+    await generateStaticPreview(FIXTURES, outPath);
+    html = fs.readFileSync(outPath, 'utf-8');
+  });
+
+  it('includes fuzzy-row CSS class in generated preview', () => {
+    assert.ok(html.includes('fuzzy-row'), 'should have fuzzy-row CSS class');
+  });
+
+  it('includes fuzzy-badge in generated preview', () => {
+    assert.ok(html.includes('fuzzy-badge'), 'should have fuzzy-badge in generated HTML');
+  });
+
+  it('marks fuzzy entries in DATA with isFuzzy flag', () => {
+    assert.ok(html.includes('"isFuzzy":true'), 'DATA should contain isFuzzy:true for fuzzy entries');
+  });
+
+  it('includes fuzzy-row styling in CSS', () => {
+    assert.ok(
+      html.includes('tr.fuzzy-row') || html.includes('.fuzzy-row'),
+      'CSS should style fuzzy-row class'
+    );
+  });
+});

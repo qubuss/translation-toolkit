@@ -3,6 +3,23 @@
 All notable changes to **translation-toolkit** are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.5.2] — 2025-07-24
+
+### Added
+
+- **Fuzzy detection across all commands** — `parsePo()` now tracks `#, fuzzy` flags and returns a `fuzzyKeys: Set<string>` field; `validate` emits `fuzzy-entry` warnings with severity `warning`; `stats` reports fuzzy count per language; `preview` renders a yellow "fuzzy" badge and `.fuzzy-row` highlight; static preview includes the same fuzzy indicators
+- **`po-csv-tool.js` help sync** — legacy CLI alias now documents `--dry-run/-n`, `--watch/-w`, `--exit-zero`, port auto-increment, and includes updated examples
+
+### Fixed
+
+- **A2 — `test-prompt.md` delimiter references** — manual QA script incorrectly used comma `,` syntax for default pipe-delimited `|` exports; fixed in checklist headers, awk/sed commands, and row construction scripts
+- **A3 — Preview port messages invisible in background mode** — all server startup messages (`console.log`) changed to `console.error` so they appear even when the preview server is started as a background process (`&`)
+- **CHANGELOG v1.1.0 false claim** — `validate` description incorrectly claimed fuzzy detection existed since v1.1.0; removed (now properly implemented in this release)
+
+### Tests
+
+- 204 tests across 50 suites (was 187 / 46)
+
 ## [1.5.1] — 2025-07-24
 
 ### Added
@@ -142,7 +159,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Export** — `.po` → CSV with multiline support, `msgctxt` (`::` separator)
 - **Import** — CSV → `.po` with merge modes (`merge` / `replace`), format preservation
 - **Preview** — browser-based translation viewer with inline editing, dark mode, search, validation tab, statistics tab, diff tab
-- **Validate** — detects missing translations, empty `msgstr`, variable mismatches, fuzzy entries
+- **Validate** — detects missing translations, empty `msgstr`, variable mismatches
 - **Stats** — coverage % per language with progress bars, top missing keys
 - **Diff** — CSV-vs-CSV and CSV-vs-PO comparison with added/changed/removed detection
 - Multiline string support throughout
@@ -150,6 +167,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Zero runtime dependencies
 - 31 tests across 12 suites
 
+[1.5.2]: https://github.com/qubuss/translation-toolkit/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/qubuss/translation-toolkit/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/qubuss/translation-toolkit/compare/v1.4.1...v1.5.0
 [1.4.1]: https://github.com/qubuss/translation-toolkit/compare/v1.4.0...v1.4.1

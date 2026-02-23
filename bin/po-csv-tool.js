@@ -38,12 +38,14 @@ EXPORT OPTIONS
 
 IMPORT OPTIONS
   -m, --merge           Keep existing keys not in CSV (default: replace all)
+  -n, --dry-run         Show what would change without modifying any files
   -d, --dir <path>      Translations directory (default: auto-discover)
   -D, --delimiter <ch>  Column delimiter (default: |)
 
 PREVIEW OPTIONS
   -d, --dir <path>      Translations directory (default: auto-discover)
-  -p, --port <number>   HTTP server port (default: 3456)
+  -p, --port <number>   HTTP server port (default: 3456, auto-increments if busy)
+  -w, --watch           Auto-reload when .po files change
   -s, --static          Generate standalone HTML file (no server needed)
   -o, --output <path>   Output file for --static (default: translation-preview.html)
 
@@ -56,6 +58,8 @@ STATS OPTIONS
 DIFF OPTIONS
   -d, --dir <path>      Translations directory (for CSV vs .po mode)
   -D, --delimiter <ch>  Column delimiter (default: |)
+  --exit-zero           Always exit 0, even when differences are found
+                        (useful for informational diff in CI pipelines)
 
 GLOBAL OPTIONS
   --ci                  Non-interactive mode for CI/CD pipelines
@@ -76,9 +80,10 @@ EXAMPLES
   po-csv-tool export -o translations.csv -d src/i18n
   po-csv-tool import translations.csv
   po-csv-tool import translations.csv --merge
+  po-csv-tool import translations.csv --dry-run
   po-csv-tool import translations.csv -d locales/
   po-csv-tool preview
-  po-csv-tool preview --port 8080
+  po-csv-tool preview --port 8080 --watch
   po-csv-tool preview --static
   po-csv-tool preview --static -o docs/preview.html
   po-csv-tool validate

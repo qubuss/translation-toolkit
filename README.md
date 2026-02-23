@@ -42,9 +42,10 @@ A zero-dependency CLI tool to convert between [GNU gettext `.po`](https://www.gn
 - **Static export** — generate a standalone HTML preview file for GitHub Pages / S3 / email
 - **Inline editing** — click any cell in the preview to edit translations directly in the browser
 - **Plural forms** — full `msgid_plural` / `msgstr[N]` support: export as `key[N]` rows, import back, validate nplurals, preview with badge
-- **Validation** — check for missing keys, empty translations, variable mismatches, plural form consistency
+- **Validation** — check for missing keys, empty translations, variable mismatches, fuzzy entries, plural form consistency
 - **Statistics** — per-language coverage reports with progress bars
 - **Diff** — compare two CSV files or a CSV against current `.po` files
+- **Fuzzy detection** — `#, fuzzy` entries highlighted in preview (yellow badge), counted in stats, warned in validate
 - **Dark mode** — toggle between light and dark themes in the browser preview
 - **Interactive** — if multiple `.po` directories exist, prompts you to choose
 
@@ -224,6 +225,7 @@ Checks performed:
 - **Extra keys** — key exists in target but not in reference language (warning)
 - **Empty translations** — `msgstr` is empty (warning)
 - **Variable mismatch** — `{{variables}}` differ between reference and target (error/warning)
+- **Fuzzy entries** — `#, fuzzy` flag detected — translation needs review (warning)
 
 The reference language is auto-detected as the one with the most keys (typically `en`).
 

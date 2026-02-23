@@ -51,6 +51,7 @@ function writePo(filePath, opts) {
   lines.push('');
 
   for (const e of (opts.entries || [])) {
+    if (e.flags) lines.push(`#, ${e.flags}`);
     lines.push(`msgid "${e.msgid}"`);
     lines.push(`msgstr "${e.msgstr}"`);
     lines.push('');
@@ -284,5 +285,56 @@ describe('computeStats — topMissingCount', () => {
     const result = computeStats(dir);
     const pl = result.langStats.find((s) => s.lang === 'pl');
     assert.equal(pl.topMissing.length, 10, 'default topMissing limit is 10');
+  });
+});
+
+// ─── Fuzzy stats ──────────────────────────────────────────
+
+describe('computeStats — fuzzy entries', () => {
+  it('returns fuzzyKeys count from fixtures', () => {
+    const result = computeStats(FIXTURES);
+    const enStats = result.langStats.find((s) => s.lang === 'en');
+    assert.ok(enStats, 'en stats should exist');
+    assert.equal(enStats.fuzzyKeys, 3, 'en-US.po has 3 fuzzy entries');
+  });
+
+  it('returns zero fuzzyKeys when no fuzzy entries', () => {
+    const dir = path.join(TMP, 'no-fuzzy-stats');
+    fs.mkdirSync(dir, { recursive: true });
+    writePo(path.join(dir, 'en-US.po'), {
+      language: 'en',
+      entries: [
+        { msgid: 'hello', msgstr: 'Hello' },
+      ],
+    });
+    const result = computeStats(dir);
+    const enStats = result.langStats.find((s) => s.lang === 'en');
+    assert.equal(enStats.fuzzyKeys, 0, 'no fuzzy entries');
+  });
+
+  it('counts fuzzy entries per language', () => {
+    const dir = path.join(TMP, 'fuzzy-per-lang');
+    fs.mkdirSync(dir, { recursive: true });
+    writePo(path.join(dir, 'en-US.po'), {
+      language: 'en',
+      entries: [
+        { msgid: 'a', msgstr: 'A' },
+        { msgid: 'b', msgstr: 'B', flags: 'fuzzy' },
+        { msgid: 'c', msgstr: 'C', flags: 'fuzzy' },
+      ],
+    });
+    writePo(path.join(dir, 'pl-PL.po'), {
+      language: 'pl',
+      entries: [
+        { msgid: 'a', msgstr: 'A-pl' },
+        { msgid: 'b', msgstr: 'B-pl', flags: 'fuzzy, c-format' },
+        { msgid: 'c', msgstr: 'C-pl' },
+      ],
+    });
+    const result = computeStats(dir);
+    const en = result.langStats.find((s) => s.lang === 'en');
+    const pl = result.langStats.find((s) => s.lang === 'pl');
+    assert.equal(en.fuzzyKeys, 2, 'en has 2 fuzzy entries');
+    assert.equal(pl.fuzzyKeys, 1, 'pl has 1 fuzzy entry');
   });
 });

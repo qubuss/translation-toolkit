@@ -6,7 +6,7 @@ Wklej poniższy prompt w czacie nowego projektu (który ma pliki .po):
 
 ## PROMPT START
 
-Zainstaluj i przetestuj narzędzie `translation-toolkit@1.5.1` (npm) na tym projekcie.
+Zainstaluj i przetestuj narzędzie `translation-toolkit@1.5.2` (npm) na tym projekcie.
 Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj raport.
 
 > Komendy: `export`, `import`, `preview`, `validate`, `stats`, `diff`
@@ -14,8 +14,8 @@ Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj 
 ### 0. Instalacja
 
 ```bash
-npm install -g translation-toolkit@1.5.1
-translation-toolkit --version   # powinno wypisać 1.5.1
+npm install -g translation-toolkit@1.5.2
+translation-toolkit --version   # powinno wypisać 1.5.2
 ```
 
 ### 1. Odkrywanie plików .po
@@ -54,7 +54,7 @@ head -5 /tmp/tt-test-export.csv        # nagłówek + pierwsze wpisy
 Checklist:
 
 - [ ] CSV się wygenerował bez błędów
-- [ ] Nagłówek: `key,<lang1>,<lang2>,...`
+- [ ] Nagłówek: `key|<lang1>|<lang2>|...` (default delimiter `|`; z `-D ","` będzie `key,<lang1>,<lang2>`)
 - [ ] Klucze z `msgctxt` mają separator `::` (np. `menu::Save`)
 - [ ] Wieloliniowe wartości są w jednej komórce (w cudzysłowach CSV)
 - [ ] Znaki specjalne (`\"`, `\t`, `\n`) poprawnie wyeksportowane
@@ -88,8 +88,8 @@ echo "Exit code: $?"   # 0 = identyczne
 ```bash
 # Dodaj nowy klucz do CSV (dynamicznie dopasowuje liczbę kolumn)
 cp /tmp/tt-test-export.csv /tmp/tt-test-dryrun.csv
-COLS=$(head -1 /tmp/tt-test-dryrun.csv | awk -F',' '{print NF}')
-ROW='"DRYRUN_KEY"'; for i in $(seq 2 $COLS); do ROW="$ROW,\"dry lang $((i-1))\""; done
+COLS=$(head -1 /tmp/tt-test-dryrun.csv | awk -F'|' '{print NF}')
+ROW='DRYRUN_KEY'; for i in $(seq 2 $COLS); do ROW="$ROW|dry lang $((i-1))"; done
 echo "$ROW" >> /tmp/tt-test-dryrun.csv
 
 translation-toolkit import /tmp/tt-test-dryrun.csv --dir "$PO_DIR" --dry-run
@@ -212,14 +212,14 @@ cp /tmp/tt-test-export.csv /tmp/tt-test-modified.csv
 
 # Wprowadź 3 zmiany w modified.csv:
 # 1) Zmień wartość w wierszu 3 (zamień tłumaczenie)
-sed -i '' '3s/,[^,]*$/,ZMIENIONE/' /tmp/tt-test-modified.csv 2>/dev/null || \
-sed -i  '3s/,[^,]*$/,ZMIENIONE/' /tmp/tt-test-modified.csv
+sed -i '' '3s/|[^|]*$/|ZMIENIONE/' /tmp/tt-test-modified.csv 2>/dev/null || \
+sed -i  '3s/|[^|]*$/|ZMIENIONE/' /tmp/tt-test-modified.csv
 # 2) Usuń wiersz 5 (symulacja usunięcia klucza)
 sed -i '' '5d' /tmp/tt-test-modified.csv 2>/dev/null || \
 sed -i  '5d' /tmp/tt-test-modified.csv
 # 3) Dodaj nowy klucz na końcu (dynamicznie dopasowuje liczbę kolumn)
-COLS=$(head -1 /tmp/tt-test-modified.csv | awk -F',' '{print NF}')
-NEW_ROW='"NEW_TEST_KEY"'; for i in $(seq 2 $COLS); do NEW_ROW="$NEW_ROW,\"new val $((i-1))\""; done
+COLS=$(head -1 /tmp/tt-test-modified.csv | awk -F'|' '{print NF}')
+NEW_ROW='NEW_TEST_KEY'; for i in $(seq 2 $COLS); do NEW_ROW="$NEW_ROW|new val $((i-1))"; done
 echo "$NEW_ROW" >> /tmp/tt-test-modified.csv
 
 translation-toolkit diff /tmp/tt-test-export.csv /tmp/tt-test-modified.csv
@@ -584,6 +584,65 @@ echo "Exit: $?"
 - [ ] Diff wykrywa zmianę w wierszu `key[N]`
 - [ ] `translation-toolkit diff /tmp/tt-plural-test.csv --dir "$PO_DIR"` → "No differences" (CSV-vs-PO)
 
+### 14. Test FUZZY DETECTION (v1.5.2)
+
+Fuzzy entries (`#, fuzzy`) to tłumaczenia oznaczone jako wymagające przeglądu. Od v1.5.2 narzędzie wykrywa i raportuje je we wszystkich komendach.
+
+**Validate — fuzzy warnings:**
+
+```bash
+translation-toolkit validate --dir "$PO_DIR"
+```
+
+- [ ] Jeśli projekt ma `#, fuzzy` w plikach .po → validate powinno wypisać warning `fuzzy-entry` dla każdego fuzzy klucza
+- [ ] Fuzzy issues mają severity `warning` (nie blokują — exit code 0 jeśli brak innych errors)
+- [ ] Nagłówek raportu pokazuje liczbę fuzzy entries: np. `(3 fuzzy)`
+
+**Stats — fuzzy counter:**
+
+```bash
+translation-toolkit stats --dir "$PO_DIR"
+```
+
+- [ ] Dla każdego języka: linia `Fuzzy: X entries need review` (0 jeśli brak fuzzy)
+
+**Preview — fuzzy badge:**
+
+```bash
+translation-toolkit preview --dir "$PO_DIR" --static -o /tmp/tt-fuzzy-preview.html
+open /tmp/tt-fuzzy-preview.html
+```
+
+- [ ] Fuzzy wpisy mają żółte tło wiersza (`.fuzzy-row`)
+- [ ] Obok klucza widoczna etykieta `fuzzy` (żółta odznaka `.fuzzy-badge`)
+- [ ] Fuzzy wpisy SĄ edytowalne (w przeciwieństwie do plural entries które są read-only)
+
+**Jeśli projekt NIE ma fuzzy entries:**
+
+```bash
+# Utwórz tymczasowy plik .po z fuzzy entry:
+mkdir -p /tmp/tt-fuzzy-test
+cat > /tmp/tt-fuzzy-test/en-US.po << 'EOF'
+msgid ""
+msgstr ""
+"Language: en\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+#, fuzzy
+msgid "needs.review"
+msgstr "This needs review"
+
+msgid "clean.entry"
+msgstr "This is clean"
+EOF
+
+translation-toolkit validate --dir /tmp/tt-fuzzy-test
+translation-toolkit stats --dir /tmp/tt-fuzzy-test
+```
+
+- [ ] Validate raportuje 1 fuzzy-entry warning
+- [ ] Stats pokazuje `Fuzzy: 1 entries need review`
+
 ### 11. Anomalie i niestandardowe zachowania
 
 **WAŻNE**: Przez cały czas testowania notuj WSZYSTKIE niespodziewane zachowania, nawet jeśli nie są błędami. Anomalie to rzeczy, które Cię zaskoczyły, wymagały dodatkowej interwencji lub mogą być problemem dla innych użytkowników.
@@ -613,7 +672,7 @@ Dla każdej anomalii zanotuj:
 Wygeneruj raport **dokładnie** w poniższym formacie:
 
 ```
-## Translation Toolkit v1.5.1 — Test Report
+## Translation Toolkit v1.5.2 — Test Report
 
 **Projekt**: [nazwa projektu]
 **Pliki .po**: X plików, Y języków
@@ -660,6 +719,9 @@ Wygeneruj raport **dokładnie** w poniższym formacie:
 | **R11** | **Custom delimiter `-D` round-trip** | ✅/❌ | v1.5.1 new: comma/tab export→import |
 | **R12** | **Import `--merge` mode** | ✅/❌ | v1.5.1 new: keeps existing keys |
 | **R13** | **Validate exit code** | ✅/❌ | v1.5.1 new: exit 1 on errors, 0 otherwise |
+| **R14** | **Fuzzy validate warnings** | ✅/❌ | v1.5.2 new: `fuzzy-entry` type, severity warning |
+| **R15** | **Fuzzy stats counter** | ✅/❌ | v1.5.2 new: `Fuzzy: X entries need review` |
+| **R16** | **Fuzzy preview badge** | ✅/❌ | v1.5.2 new: yellow row + fuzzy badge |
 
 ### Anomalie
 

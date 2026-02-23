@@ -151,7 +151,7 @@ npm test          # runs: node --test test/*.test.js
 ```
 
 - **Framework:** `node:test` with `describe`/`it`/`before`/`after` and `node:assert/strict`
-- **~126 tests across 27 suites** (update this count in CHANGELOG when tests change)
+- **~204 tests across 50 suites** (update this count in CHANGELOG when tests change)
 - **Temp dirs:** Tests create `.tmp*` directories in `test/`, cleaned up in `after()` hooks
 - **CLI tests:** Use `child_process.execFileSync` to test actual binary behavior and exit codes
 - **No mocking framework** — uses console.log capture (`process.stdout.write`) for output testing

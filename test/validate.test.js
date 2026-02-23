@@ -35,8 +35,8 @@ after(() => {
  * @param {object} opts
  * @param {string} opts.language
  * @param {string} [opts.pluralForms]
- * @param {Array<{msgid: string, msgstr: string, msgctxt?: string}>} [opts.entries]
- * @param {Array<{msgid: string, msgid_plural: string, msgstr: string[], msgctxt?: string}>} [opts.plurals]
+ * @param {Array<{msgid: string, msgstr: string, msgctxt?: string, flags?: string}>} [opts.entries]
+ * @param {Array<{msgid: string, msgid_plural: string, msgstr: string[], msgctxt?: string, flags?: string}>} [opts.plurals]
  */
 function writePo(filePath, opts) {
   const lines = [];
@@ -51,6 +51,7 @@ function writePo(filePath, opts) {
   lines.push('');
 
   for (const e of (opts.entries || [])) {
+    if (e.flags) lines.push(`#, ${e.flags}`);
     if (e.msgctxt) lines.push(`msgctxt "${e.msgctxt}"`);
     lines.push(`msgid "${e.msgid}"`);
     lines.push(`msgstr "${e.msgstr}"`);
@@ -58,6 +59,7 @@ function writePo(filePath, opts) {
   }
 
   for (const p of (opts.plurals || [])) {
+    if (p.flags) lines.push(`#, ${p.flags}`);
     if (p.msgctxt) lines.push(`msgctxt "${p.msgctxt}"`);
     lines.push(`msgid "${p.msgid}"`);
     lines.push(`msgid_plural "${p.msgid_plural}"`);
@@ -531,5 +533,70 @@ describe('validate CLI exit codes', () => {
       assert.ok(err.stdout.includes('missing key'),
         'Output should mention missing key');
     }
+  });
+});
+
+// ─── Fuzzy detection ────────────────────────────────────
+
+describe('validateTranslations — fuzzy detection', () => {
+  it('detects fuzzy entries from fixtures', () => {
+    const result = validateTranslations(FIXTURES);
+    const fuzzyIssues = result.issues.filter((i) => i.type === 'fuzzy-entry');
+    assert.ok(fuzzyIssues.length > 0, 'should detect fuzzy entries in fixtures');
+    const fuzzyKeys = fuzzyIssues.map((i) => i.key);
+    assert.ok(fuzzyKeys.includes('commented.entry'), 'commented.entry is fuzzy');
+    assert.ok(fuzzyKeys.includes('fuzzy.entry'), 'fuzzy.entry is fuzzy');
+    assert.ok(fuzzyKeys.includes('new.key.name'), 'new.key.name is fuzzy');
+  });
+
+  it('returns totalFuzzyKeys count from fixtures', () => {
+    const result = validateTranslations(FIXTURES);
+    assert.ok(result.totalFuzzyKeys >= 3, `should have >= 3 fuzzy keys, got ${result.totalFuzzyKeys}`);
+  });
+
+  it('fuzzy issues have severity warning', () => {
+    const result = validateTranslations(FIXTURES);
+    const fuzzyIssues = result.issues.filter((i) => i.type === 'fuzzy-entry');
+    for (const issue of fuzzyIssues) {
+      assert.equal(issue.severity, 'warning', 'fuzzy issues should be warnings');
+    }
+  });
+
+  it('detects fuzzy in custom .po files', () => {
+    const dir = path.join(TMP, 'fuzzy-custom');
+    fs.mkdirSync(dir, { recursive: true });
+    writePo(path.join(dir, 'en-US.po'), {
+      language: 'en',
+      entries: [
+        { msgid: 'hello', msgstr: 'Hello' },
+        { msgid: 'world', msgstr: 'World', flags: 'fuzzy' },
+      ],
+    });
+    writePo(path.join(dir, 'pl-PL.po'), {
+      language: 'pl',
+      entries: [
+        { msgid: 'hello', msgstr: 'Cześć' },
+        { msgid: 'world', msgstr: 'Świat', flags: 'fuzzy, c-format' },
+      ],
+    });
+    const result = validateTranslations(dir);
+    const fuzzyIssues = result.issues.filter((i) => i.type === 'fuzzy-entry');
+    assert.ok(fuzzyIssues.length >= 2, 'should detect fuzzy in both languages');
+    assert.equal(result.totalFuzzyKeys, 2, 'one fuzzy key in each of 2 languages = 2 total');
+  });
+
+  it('returns zero fuzzyKeys when no fuzzy entries', () => {
+    const dir = path.join(TMP, 'no-fuzzy');
+    fs.mkdirSync(dir, { recursive: true });
+    writePo(path.join(dir, 'en-US.po'), {
+      language: 'en',
+      entries: [
+        { msgid: 'hello', msgstr: 'Hello' },
+      ],
+    });
+    const result = validateTranslations(dir);
+    const fuzzyIssues = result.issues.filter((i) => i.type === 'fuzzy-entry');
+    assert.equal(fuzzyIssues.length, 0, 'no fuzzy issues');
+    assert.equal(result.totalFuzzyKeys, 0, 'zero fuzzy keys');
   });
 });

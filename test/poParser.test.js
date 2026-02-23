@@ -887,3 +887,105 @@ describe('patchPoFile — plural forms', () => {
     assert.equal(entry.msgstr[2], '%d dni pozostało\nw Twojej subskrypcji', 'Form 2 unchanged');
   });
 });
+
+// ─── Fuzzy flag parsing ──────────────────────────────────
+
+describe('parsePo — fuzzyKeys', () => {
+  it('returns fuzzyKeys set from fixtures', () => {
+    const result = parsePo(path.join(FIXTURES, 'en-US.po'));
+    assert.ok(result.fuzzyKeys instanceof Set, 'fuzzyKeys should be a Set');
+    assert.ok(result.fuzzyKeys.has('commented.entry'), 'commented.entry has #, fuzzy');
+    assert.ok(result.fuzzyKeys.has('fuzzy.entry'), 'fuzzy.entry has #, fuzzy, c-format');
+    assert.ok(result.fuzzyKeys.has('new.key.name'), 'new.key.name has #, fuzzy');
+    assert.equal(result.fuzzyKeys.size, 3, 'exactly 3 fuzzy entries in en-US.po');
+  });
+
+  it('returns empty set when no fuzzy entries', () => {
+    const tmpPo = path.join(TMP, 'no-fuzzy.po');
+    const content = [
+      'msgid ""',
+      'msgstr ""',
+      '"Language: en\\n"',
+      '"Content-Type: text/plain; charset=UTF-8\\n"',
+      '',
+      'msgid "clean.entry"',
+      'msgstr "No fuzzy flag"',
+      '',
+    ].join('\n');
+    fs.writeFileSync(tmpPo, content, 'utf-8');
+    const result = parsePo(tmpPo);
+    assert.equal(result.fuzzyKeys.size, 0, 'no fuzzy entries');
+  });
+
+  it('detects fuzzy combined with other flags', () => {
+    const tmpPo = path.join(TMP, 'multi-flag.po');
+    const content = [
+      'msgid ""',
+      'msgstr ""',
+      '"Language: en\\n"',
+      '"Content-Type: text/plain; charset=UTF-8\\n"',
+      '',
+      '#, fuzzy, c-format, python-format',
+      'msgid "multi.flag"',
+      'msgstr "Has multiple flags"',
+      '',
+      '#, c-format',
+      'msgid "not.fuzzy"',
+      'msgstr "Only c-format"',
+      '',
+    ].join('\n');
+    fs.writeFileSync(tmpPo, content, 'utf-8');
+    const result = parsePo(tmpPo);
+    assert.ok(result.fuzzyKeys.has('multi.flag'), 'multi.flag should be fuzzy');
+    assert.ok(!result.fuzzyKeys.has('not.fuzzy'), 'not.fuzzy should not be fuzzy');
+    assert.equal(result.fuzzyKeys.size, 1);
+  });
+
+  it('detects fuzzy on plural entries', () => {
+    const tmpPo = path.join(TMP, 'fuzzy-plural.po');
+    const content = [
+      'msgid ""',
+      'msgstr ""',
+      '"Language: en\\n"',
+      '"Content-Type: text/plain; charset=UTF-8\\n"',
+      '"Plural-Forms: nplurals=2; plural=(n != 1);\\n"',
+      '',
+      '#, fuzzy',
+      'msgid "%d item"',
+      'msgid_plural "%d items"',
+      'msgstr[0] "%d item"',
+      'msgstr[1] "%d items"',
+      '',
+      'msgid "%d cat"',
+      'msgid_plural "%d cats"',
+      'msgstr[0] "%d cat"',
+      'msgstr[1] "%d cats"',
+      '',
+    ].join('\n');
+    fs.writeFileSync(tmpPo, content, 'utf-8');
+    const result = parsePo(tmpPo);
+    assert.ok(result.fuzzyKeys.has('%d item'), 'fuzzy plural should be detected');
+    assert.ok(!result.fuzzyKeys.has('%d cat'), 'non-fuzzy plural should not be detected');
+    assert.equal(result.fuzzyKeys.size, 1);
+  });
+
+  it('detects fuzzy on msgctxt entries', () => {
+    const tmpPo = path.join(TMP, 'fuzzy-ctx.po');
+    const content = [
+      'msgid ""',
+      'msgstr ""',
+      '"Language: en\\n"',
+      '"Content-Type: text/plain; charset=UTF-8\\n"',
+      '',
+      '#, fuzzy',
+      'msgctxt "menu"',
+      'msgid "Save"',
+      'msgstr "Save"',
+      '',
+    ].join('\n');
+    fs.writeFileSync(tmpPo, content, 'utf-8');
+    const result = parsePo(tmpPo);
+    assert.ok(result.fuzzyKeys.has('menu\x04Save'), 'fuzzy msgctxt entry should use \\x04 separator');
+    assert.equal(result.fuzzyKeys.size, 1);
+  });
+});
