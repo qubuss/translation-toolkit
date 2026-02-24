@@ -6,7 +6,7 @@ Wklej poniższy prompt w czacie nowego projektu (który ma pliki .po):
 
 ## PROMPT START
 
-Zainstaluj i przetestuj narzędzie `translation-toolkit@1.6.0` (npm) na tym projekcie.
+Zainstaluj i przetestuj narzędzie `translation-toolkit@1.8.0` (npm) na tym projekcie.
 Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj raport.
 
 > Komendy: `export`, `import`, `preview`, `validate`, `stats`, `diff`
@@ -14,8 +14,8 @@ Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj 
 ### 0. Instalacja
 
 ```bash
-npm install -g translation-toolkit@1.6.0
-translation-toolkit --version   # powinno wypisać 1.6.0
+npm install -g translation-toolkit@1.8.0
+translation-toolkit --version   # powinno wypisać 1.7.0
 ```
 
 ### 1. Odkrywanie plików .po
@@ -716,6 +716,117 @@ translation-toolkit validate --dir "$PO_DIR" --json --severity warning
 
 - [ ] JSON zawiera zarówno errory jak i warnings
 
+### 17. Test JSON FORMAT (v1.7.0)
+
+Nowa funkcjonalność: eksport/import do formatu JSON (per-language files).
+
+```bash
+# Export do JSON
+mkdir -p /tmp/tt-json-test
+translation-toolkit export --format json -o /tmp/tt-json-test --dir "$PO_DIR" --ci
+```
+
+- [ ] Tworzy osobny .json per język (np. en.json, pl.json)
+- [ ] JSON jest pretty-printed (2 spacje indent)
+- [ ] Klucze singularne → string values
+- [ ] Klucze pluralne → arrays: `"%d file": ["%d file", "%d files"]`
+- [ ] Klucze z msgctxt używają `::` separator: `"menu::Save"`
+
+```bash
+# Sprawdź zawartość
+cat /tmp/tt-json-test/en.json | python3 -c "import json,sys; d=json.load(sys.stdin); print('Keys:', len(d)); plurals=[k for k,v in d.items() if isinstance(v,list)]; print('Plural:', len(plurals))"
+```
+
+- [ ] Liczba kluczy zgadza się z liczbą z export CSV
+- [ ] Plurale zgadzają się
+
+```bash
+# Import JSON z powrotem (dry-run)
+translation-toolkit import --format json /tmp/tt-json-test --dir "$PO_DIR" --ci --dry-run
+```
+
+- [ ] Import wykrywa pliki JSON
+- [ ] Dry-run raportuje "Would update" bez zmian plików
+- [ ] Zmiany = 0 (round-trip powinien być bezstratny)
+
+```bash
+# Import JSON z powrotem (faktyczny)
+# Najpierw skopiuj .po do temp
+cp -r "$PO_DIR" /tmp/tt-json-po-copy
+translation-toolkit import --format json /tmp/tt-json-test --dir /tmp/tt-json-po-copy --ci
+```
+
+- [ ] Import aktualizuje pliki .po
+- [ ] `diff` między oryginalnymi a reimportowanymi .po nie pokazuje zmian wartości
+
+```bash
+# Test nested JSON import
+echo '{"menu": {"save": "Save", "open": "Open"}, "title": "Hello"}' > /tmp/tt-json-test/en.json
+translation-toolkit import --format json /tmp/tt-json-test --dir /tmp/tt-json-po-copy --ci --merge --dry-run
+```
+
+- [ ] Nested JSON jest auto-flatten: `menu.save`, `menu.open`, `title`
+- [ ] Merge mode zachowuje istniejące klucze
+
+```bash
+# Test invalid format
+translation-toolkit export --format xml --dir "$PO_DIR" --ci 2>&1
+```
+
+- [ ] Error: "Unknown format" + exit code 1
+
+### 18. Test i18next FORMAT (v1.8.0)
+
+Nowa funkcjonalność: eksport/import do formatu i18next z mapowaniem CLDR plural forms.
+
+```bash
+# Export do i18next v4 (CLDR — default)
+mkdir -p /tmp/tt-i18next-v4
+translation-toolkit export --format i18next -o /tmp/tt-i18next-v4 --dir "$PO_DIR" --ci
+```
+
+- [ ] Tworzy osobny .json per język (np. en.json, pl.json)
+- [ ] JSON jest pretty-printed (2 spacje indent)
+- [ ] Klucze singularne → string values
+- [ ] En plural sufiksy: `_one`, `_other` (np. `%d file_one`, `%d file_other`)
+- [ ] Pl plural sufiksy: `_one`, `_few`, `_many`
+- [ ] Log zawiera "[i18next v4 (CLDR)]"
+
+```bash
+# Sprawdź CLDR sufiksy
+cat /tmp/tt-i18next-v4/en.json | python3 -c "import json,sys; d=json.load(sys.stdin); [print(k) for k in d if '_one' in k or '_other' in k]"
+```
+
+- [ ] Widać klucze z sufiksami `_one`, `_other`
+- [ ] Nie ma kluczy z sufiksami `_plural`, `_0`, `_1`, `_2`
+
+```bash
+# Export do i18next v3 (legacy)
+mkdir -p /tmp/tt-i18next-v3
+translation-toolkit export --format i18next --compat 3 -o /tmp/tt-i18next-v3 --dir "$PO_DIR" --ci
+```
+
+- [ ] En plural: base key + `_plural` (np. `%d file` + `%d file_plural`)
+- [ ] Pl plural (nplurals=3): `_0`, `_1`, `_2` (np. `%d file_0`, `%d file_1`, `%d file_2`)
+- [ ] Log zawiera "[i18next v3]"
+
+```bash
+# Import i18next v4 — round-trip
+cp -r "$PO_DIR" /tmp/tt-i18next-po-copy
+translation-toolkit import --format i18next /tmp/tt-i18next-v4 --dir /tmp/tt-i18next-po-copy --ci
+```
+
+- [ ] Import wykrywa pliki JSON z CLDR sufiksami
+- [ ] Round-trip bezstratny: `diff` między oryginalnymi a reimportowanymi .po nie pokazuje zmian wartości
+
+```bash
+# Import i18next v3 — round-trip
+cp -r "$PO_DIR" /tmp/tt-i18next-po-v3
+translation-toolkit import --format i18next --compat 3 /tmp/tt-i18next-v3 --dir /tmp/tt-i18next-po-v3 --ci
+```
+
+- [ ] Import v3 poprawnie mapuje `_plural` → msgstr[1], `_0/_1/_2` → msgstr[0]/[1]/[2]
+
 ### 11. Anomalie i niestandardowe zachowania
 
 **WAŻNE**: Przez cały czas testowania notuj WSZYSTKIE niespodziewane zachowania, nawet jeśli nie są błędami. Anomalie to rzeczy, które Cię zaskoczyły, wymagały dodatkowej interwencji lub mogą być problemem dla innych użytkowników.
@@ -745,7 +856,7 @@ Dla każdej anomalii zanotuj:
 Wygeneruj raport **dokładnie** w poniższym formacie:
 
 ```
-## Translation Toolkit v1.6.0 — Test Report
+## Translation Toolkit v1.7.0 — Test Report
 
 **Projekt**: [nazwa projektu]
 **Pliki .po**: X plików, Y języków
@@ -800,6 +911,11 @@ Wygeneruj raport **dokładnie** w poniższym formacie:
 | **R19** | **Unfuzzy on import** | ✅/❌ | v1.6.0 new: empty `_status` removes `#, fuzzy` |
 | **R20** | **validate --json** | ✅/❌ | v1.6.0 new: JSON output with errors/warnings/summary |
 | **R21** | **validate --severity error** | ✅/❌ | v1.6.0 new: hides warnings, exit 0 if no errors |
+| **R22** | **--format json export** | ✅/❌ | v1.7.0 new: per-lang .json files, plurals as arrays |
+| **R23** | **--format json import round-trip** | ✅/❌ | v1.7.0 new: JSON → .po preserves all entries |
+| **R24** | **--format i18next export v4** | ✅/❌ | v1.8.0 new: CLDR suffixes _one/_other/_few/_many |
+| **R25** | **--format i18next --compat 3** | ✅/❌ | v1.8.0 new: v3 legacy _plural/_0/_1/_2 |
+| **R26** | **--format i18next round-trip** | ✅/❌ | v1.8.0 new: i18next → .po preserves singular+plural |
 
 ### Anomalie
 

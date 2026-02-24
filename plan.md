@@ -1,14 +1,14 @@
 # translation-toolkit — Plan rozwoju
 
-## Status: AKTYWNY — v1.5.2 wydane, v1.6.0 w planach
+## Status: AKTYWNY — v1.8.0 wydane, Faza 3.2 done, 3.3 następna
 
-**Strategia:** Iteracyjne wydania — solidne fundamenty (Faza 1 ✅), polish & DX (v1.2–v1.4 ✅), plural forms (Faza 2 ✅), polish (v1.5.1–v1.5.2 ✅), potem fuzzy CSV + validate improvements (v1.6.0), a na końcu rozszerzenie o JSON/i18next (Faza 3). Każda faza kończy się publikacją na npm.
+**Strategia:** Iteracyjne wydania — solidne fundamenty (Faza 1 ✅), polish & DX (v1.2–v1.4 ✅), plural forms (Faza 2 ✅), polish (v1.5.1–v1.5.2 ✅), fuzzy CSV + validate improvements (v1.6.0 ✅), JSON format (v1.7.0 ✅), i18next format (v1.8.0 ✅), teraz cross-format validation (Faza 3.3). Każda faza kończy się publikacją na npm.
 
 **Nazwa paczki:** `translation-toolkit` ✅ (opublikowana na npm)
 **Repozytorium:** https://github.com/qubuss/translation-toolkit
 **Zero dependencies** — kluczowy wyróżnik
-**Aktualna wersja:** v1.5.2 (23.02.2026)
-**Testy:** 241 testów / 59 suite'ów
+**Aktualna wersja:** v1.8.0 (26.02.2026)
+**Testy:** 336 testów / 81 suite'ów
 
 ---
 
@@ -135,16 +135,18 @@ Pliki zmienione: `lib/validate.js`
 - [x] Full test-prompt.md run — ALL 40+ checks passed
 - [x] Anomalia A1: en/de zyskują puste `msgstr[2]` po round-trip z pl (nplurals=3) — known, nie-blocker
 
-#### F6. Publikacja v1.6.0
+#### F6. Publikacja v1.6.0 ✅ DONE
 
-- [ ] Bump version → 1.6.0
-- [ ] CHANGELOG.md, README.md, test-prompt.md
-- [ ] `npm publish`, git tag
-- [ ] Real-world test na integration project + zewnętrzny projekt
+**Zrobione: 24.02.2026**
+
+- [x] Bump version → 1.6.0
+- [x] CHANGELOG.md, README.md, test-prompt.md
+- [x] `npm publish`, git tag v1.6.0
+- [x] Real-world test na integration project — all checks passed
 
 ---
 
-### Faza 3 — Nowe formaty (v2.0+) 🔮 WAŻNE, ALE PÓŹNIEJ
+### Faza 3 — Nowe formaty (v2.0+) ⏳ NASTĘPNA
 
 Cel: rozszerzenie o eksport/import do JSON i i18next. Zmienia charakter paczki z "PO ↔ CSV" na "translation Swiss Army Knife".
 
@@ -156,23 +158,25 @@ Cel: rozszerzenie o eksport/import do JSON i i18next. Zmienia charakter paczki z
 >
 > **Wniosek:** Faza 3 ma sens, ale dopiero po solidnym PO ↔ CSV core. Nie blokuje publikacji.
 
-#### 3.1 Export/Import do flat JSON
+#### 3.1 Export/Import do flat JSON ✅ DONE
 
-**Szacunek: 1-2 dni**
+**Zrobione: 24.02.2026**
 
-- [ ] Nowy moduł `lib/jsonFormat.js`
-- [ ] Opcja `--format json|csv` w export i import
-- [ ] Obsługa nested keys (opcjonalnie): `mainMenu.send` → `{ "mainMenu": { "send": "..." } }`
-- [ ] Round-trip test: .po → JSON → .po
+- [x] Nowy moduł `lib/jsonFormat.js`
+- [x] Opcja `--format json|csv` w export i import
+- [x] Obsługa nested keys: auto-flatten on import (dot-separated)
+- [x] Round-trip test: .po → JSON → .po (33 testów, 8 suites)
 
-#### 3.2 Export/Import do formatu i18next
+#### 3.2 Export/Import do formatu i18next ✅ DONE
 
-**Szacunek: 2-3 dni**
+**Zrobione: 26.02.2026**
 
-- [ ] Nowy moduł `lib/i18nextFormat.js`
-- [ ] Mapowanie plural forms gettext → i18next suffixes
-- [ ] Obsługa `compatibilityJSON` (v3 vs v4)
-- [ ] Zero-dependency — przewaga nad `i18next-conv`
+- [x] Nowy moduł `lib/i18nextFormat.js`
+- [x] Mapowanie plural forms gettext → i18next suffixes (CLDR v4 + legacy v3)
+- [x] Obsługa `compatibilityJSON` (v3 vs v4) — flaga `--compat 3|4`
+- [x] Zero-dependency — przewaga nad `i18next-conv`
+- [x] 14 języków w mapowaniu CLDR + arabski (6 form), fallback na one/other
+- [x] Round-trip test: .po → i18next → .po (46 testów, 11 suites)
 
 #### 3.3 Walidacja cross-format
 
@@ -197,11 +201,14 @@ Cel: rozszerzenie o eksport/import do JSON i i18next. Zmienia charakter paczki z
 | **Faza 1.x**     | preview, watch, static, --ci, bugfixes | ~5 dni   | ✅ v1.2–v1.4.1 (22.02.2026)          |
 | **Faza 2**       | plural forms (fix data loss)           | ~3 dni   | ✅ v1.5.0 (23.02.2026)               |
 | **v1.5.1–1.5.2** | delimiter, merge, fuzzy, tests         | ~1.5 dni | ✅ v1.5.2 (23.02.2026)               |
-| **v1.6.0**       | fuzzy CSV, validate --json/--severity  | ~1.5 dni | ✅ DONE (F1-F4 all complete, 257/62) |
-| **Faza 3**       | JSON + i18next + cross-validate        | ~5-6 dni | 🔮 przyszłość                        |
+| **v1.6.0**       | fuzzy CSV, validate --json/--severity  | ~1.5 dni | ✅ v1.6.0 (24.02.2026), 257/62       |
+| **v1.7.0**       | JSON format (flat export/import)       | ~0.5 dnia| ✅ v1.7.0 (24.02.2026), 290/70       |
+| **v1.8.0**       | i18next format (CLDR v4 + v3 legacy)   | ~0.5 dnia| ✅ v1.8.0 (26.02.2026), 336/81       |
+| **Faza 3.3**     | cross-format validation                | ~1 dzień | ⏳ następna                           |
+| **Faza 3.4**     | finalizacja v2.0                       | ~1 dzień | ⏳ po 3.3                             |
 
-**Dotychczasowy czas**: ~12-13 dni (Faza 1 + 1.x + 2 + v1.5.1–1.5.2)
-**Pozostało**: ~2.5 dni (v1.6.0) + ~5-6 dni (Faza 3)
+**Dotychczasowy czas**: ~15 dni (Faza 1 + 1.x + 2 + v1.5.1–1.5.2 + v1.6.0 + v1.7.0 + v1.8.0)
+**Pozostało**: ~2 dni (Faza 3.3 + 3.4)
 
 ---
 
@@ -216,18 +223,19 @@ Cel: rozszerzenie o eksport/import do JSON i i18next. Zmienia charakter paczki z
 | Plural forms w CSV       | Osobne wiersze z `key[N]` sufiksem                                 | 20.02.2026 |
 | Separator msgctxt        | `::` (np. `menu::Open`, wewnętrznie `\x04`)                        | 20.02.2026 |
 | Static preview           | `--static` → `translation-preview/index.html`                      | 22.02.2026 |
-| Fuzzy w CSV              | Kolumna `_status` (nie sufiks) — do potwierdzenia w v1.6.0         | 23.02.2026 |
+| Fuzzy w CSV              | Kolumna `_status` (nie sufiks) — potwierdzone i wdrożone w v1.6.0  | 24.02.2026 |
 | Integration test project | `test/integration-project/` — 3 języki, pełne edge cases           | 23.02.2026 |
 | v1.6.0 scope             | Fuzzy CSV + validate --json + --severity + integration tests       | 23.02.2026 |
 | Real-world test prompt   | `test-prompt.md` — 40+ checków + 16 regresji + anomalie            | 23.02.2026 |
 
 ## 4. Otwarte pytania
 
-- **Fuzzy w CSV format** — kolumna `_status` vs sufiks `[fuzzy]`? (rekomendacja: kolumna) → **decyzja: kolumna `_status`**
-- **Fuzzy unfuzzy** — auto-unfuzzy przy import jeśli tłumaczenie zmienione? czy explicit via `_status`?
-- **Validate --json schema** — ustalić dokładny format JSON (pod CI tools)
+- ~~**Fuzzy w CSV format** — kolumna `_status` vs sufiks `[fuzzy]`?~~ → **DONE v1.6.0: kolumna `_status`**
+- ~~**Fuzzy unfuzzy** — auto-unfuzzy przy import jeśli tłumaczenie zmienione?~~ → **DONE v1.6.0: explicit via `_status` column**
+- ~~**Validate --json schema** — ustalić dokładny format JSON~~ → **DONE v1.6.0: `{ errors, warnings, summary }`**
 - ~~**Integration test project** — ile kluczy, jakie edge cases, jakie języki~~ → **DONE: 112 kluczy, en/pl/de, 28 testów**
 - **A1: Extra plural forms** — en/de zyskują puste `msgstr[2]` przy round-trip z pl (nplurals=3). Opcje: `--strip-extra-plural-forms` flag, lub inteligentne pomijanie pustych form w eksporcie.
+- **Faza 3 scope** — zacząć od flat JSON (3.1) czy od razu i18next (3.2)? Jaki format kluczy w JSON (flat vs nested)?
 
 ## 5. Historia wydań
 
@@ -243,4 +251,6 @@ Cel: rozszerzenie o eksport/import do JSON i i18next. Zmienia charakter paczki z
 | v1.5.1     | 23.02.2026 | Custom delimiter -D, --merge mode, test expansion                        | 187 / 46 |
 | v1.5.2     | 23.02.2026 | Fuzzy detection (validate/stats/preview), A2/A3 fixes                    | 204 / 50 |
 | v1.5.2+    | 23.02.2026 | Integration test project (3 langs, 112 keys, 28 tests)                   | 232 / 58 |
-| v1.6.0-dev | 23.02.2026 | F1: \_status column in CSV export (fuzzy info)                           | 241 / 59 |
+| v1.6.0     | 24.02.2026 | _status column, unfuzzy import, --json, --severity                       | 257 / 62 |
+| v1.7.0     | 24.02.2026 | JSON export/import (--format json), nested auto-flatten                   | 290 / 70 |
+| v1.8.0     | 26.02.2026 | i18next export/import (--format i18next), CLDR v4 + v3, --compat         | 336 / 81 |

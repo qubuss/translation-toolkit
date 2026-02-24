@@ -113,9 +113,11 @@ translation-toolkit export [options]
 
 | Option                 | Description                            | Default            |
 | ---------------------- | -------------------------------------- | ------------------ |
-| `-o, --output <file>`  | Output CSV file path                   | `translations.csv` |
+| `-o, --output <file>`  | Output CSV file path (or directory for `--format json`/`i18next`) | `translations.csv` |
 | `-d, --dir <path>`     | Translations directory                 | auto-discover      |
 | `-D, --delimiter <ch>` | Column delimiter                       | `\|`               |
+| `-f, --format <fmt>`   | Output format: `csv`, `json`, or `i18next` | `csv`          |
+| `--compat <ver>`       | i18next compatibility: `4` (CLDR) or `3` (legacy) | `4`        |
 | `--no-status`          | Omit the `_status` column from the CSV | include status     |
 
 **Example output** (`translations.csv`):
@@ -142,6 +144,77 @@ key|_status|en|pl
 
 English has 2 forms (`[0]` singular, `[1]` plural). Polish has 3 forms. Empty cells are filled when a language has fewer forms. On import, `key[N]` rows are automatically grouped back into `msgid_plural` / `msgstr[N]` blocks.
 
+#### JSON format (`--format json`)
+
+Export to per-language flat JSON files instead of CSV:
+
+```bash
+translation-toolkit export --format json -o locales/ --dir src/i18n
+```
+
+Produces `en.json`, `pl.json`, etc.:
+
+```json
+{
+  "simple.key": "Simple value",
+  "menu::Save": "Save",
+  "%d file": ["%d file", "%d files"]
+}
+```
+
+- Singular entries → string values
+- Plural entries → arrays of strings (one per form)
+- `msgctxt` keys use `::` separator
+- Nested JSON is **auto-flattened** on import: `{ "menu": { "save": "Save" } }` → `menu.save`
+
+Import JSON back:
+
+```bash
+translation-toolkit import --format json locales/ --dir src/i18n
+```
+
+#### i18next format (`--format i18next`)
+
+Export to i18next-compatible per-language JSON files:
+
+```bash
+translation-toolkit export --format i18next -o locales/ --dir src/i18n
+```
+
+Produces `en.json`, `pl.json`, etc. with CLDR plural suffixes (v4 default):
+
+```json
+{
+  "simple.key": "Simple value",
+  "%d file_one": "%d file",
+  "%d file_other": "%d files"
+}
+```
+
+For Polish (3 forms):
+
+```json
+{
+  "%d file_one": "%d plik",
+  "%d file_few": "%d pliki",
+  "%d file_many": "%d plików"
+}
+```
+
+Use `--compat 3` for legacy i18next v3 format:
+
+```bash
+translation-toolkit export --format i18next --compat 3 -o locales/
+```
+
+v3 output uses `_plural` / `_0`/`_1`/`_2` suffixes instead of CLDR categories.
+
+Import i18next JSON back:
+
+```bash
+translation-toolkit import --format i18next locales/ --dir src/i18n
+```
+
 ### Import (CSV → `.po`)
 
 ```bash
@@ -154,6 +227,8 @@ translation-toolkit import <file.csv> [options]
 | `-n, --dry-run`        | Show what would change without writing files | off           |
 | `-d, --dir <path>`     | Translations directory                       | auto-discover |
 | `-D, --delimiter <ch>` | Column delimiter                             | `\|`          |
+| `-f, --format <fmt>`   | Input format: `csv`, `json`, or `i18next` | `csv`         |
+| `--compat <ver>`       | i18next compatibility: `4` (CLDR) or `3` (legacy) | `4`   |
 
 ### Import modes
 
@@ -507,7 +582,7 @@ git diff src/translations/
 | 1.4   | CI/CD mode (`--ci` flag, non-interactive, exit codes)     | ✅ Done |
 | 1.5   | Static preview export (`--static`) for GitHub Pages       | ✅ Done |
 | 2     | Plural forms (`msgid_plural` / `msgstr[N]`)               | ✅ Done |
-| 3     | Additional formats: JSON, XLIFF, Android XML              | Planned |
+| 3     | Additional formats: JSON, XLIFF, Android XML              | 🔄 JSON + i18next done |
 | 4     | Custom validation rules                                   | Planned |
 
 ## Contributing

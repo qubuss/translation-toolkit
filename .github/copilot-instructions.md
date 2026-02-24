@@ -32,6 +32,11 @@ lib/
                PluralEntry = { msgid, msgid_plural, msgstr: string[], msgctxt? }
   export.js    → exportToCsv (core) + runExport (CLI runner)
   import.js    → importFromCsv, parseCsvContent (core) + runImport (CLI runner)
+  jsonFormat.js → exportToJson, importFromJson, parseJsonFile, discoverJsonFiles (core)
+               + _flattenObject, _isNested helpers; no CLI runner (dispatched from export/import)
+  i18nextFormat.js → exportToI18next, importFromI18next, parseI18nextFile, discoverI18nextFiles (core)
+               + GETTEXT_TO_CLDR mapping, CLDR_CATEGORIES; no CLI runner (dispatched from export/import)
+               supports --compat 3 (legacy _plural/_N) and 4 (CLDR _one/_other/_few/_many)
   validate.js  → validateTranslations (core) + runValidate (CLI runner)
   stats.js     → computeStats (core) + runStats (CLI runner)
   diff.js      → computeDiff, parseCsvFile, loadPoAsCsv (core) + runDiff (CLI runner)
@@ -40,14 +45,21 @@ lib/
 test/
   poParser.test.js    — Parser unit tests + plural parse/write/patch tests (~60 tests)
   roundtrip.test.js   — Export → import → compare + plural round-trip tests
+  jsonFormat.test.js  — JSON export/import, round-trip, nested flatten, CLI --format json
   preview.test.js     — buildHtml, static preview, CLI --static tests
   diff.test.js        — computeDiff, CLI exit codes, plural diff tests
   integration.test.js — End-to-end tests on 3-language e-commerce project (28 tests)
   fixtures/
     en-US.po, pl-PL.po                     — 50 singular + 4 plural entries each
     translations.csv, translations-modified.csv — matching CSV fixtures (incl. key[N] plural rows)
+    json/en.json, json/pl.json             — reference JSON export (flat, plurals as arrays)
+    i18next/en.json, i18next/pl.json       — reference i18next v4 export (CLDR plural suffixes)
   integration-project/translations/
     en-US.po, pl-PL.po, de-DE.po           — 104 singular + 8 plural entries, 3 languages, 7 fuzzy per lang
+  integration-project/json/
+    en.json, pl.json, de.json              — reference JSON export for 3-language project
+  integration-project/i18next/
+    en.json, pl.json, de.json              — reference i18next v4 export for 3-language project
 ```
 
 ### Module Pattern
@@ -154,7 +166,7 @@ npm test          # runs: node --test test/*.test.js
 ```
 
 - **Framework:** `node:test` with `describe`/`it`/`before`/`after` and `node:assert/strict`
-- **~232 tests across 58 suites** (update this count in CHANGELOG when tests change)
+- **~346 tests across 85 suites** (update this count in CHANGELOG when tests change)
 - **Temp dirs:** Tests create `.tmp*` directories in `test/`, cleaned up in `after()` hooks
 - **CLI tests:** Use `child_process.execFileSync` to test actual binary behavior and exit codes
 - **No mocking framework** — uses console.log capture (`process.stdout.write`) for output testing
@@ -165,6 +177,8 @@ npm test          # runs: node --test test/*.test.js
 | --------------------------------------------------------- | ------------------- | ------------------------------- |
 | PO parser, escaping, formatting, plural parse/write/patch | `poParser.test.js`    | Direct function calls           |
 | Export → import round-trip, plural round-trip             | `roundtrip.test.js`   | Direct function calls           |
+| JSON export/import, round-trip, nested flatten, CLI       | `jsonFormat.test.js`  | Direct + `execFileSync`         |
+| i18next export/import, CLDR v4, v3 compat, round-trip     | `i18nextFormat.test.js` | Direct + `execFileSync`       |
 | Preview HTML, static export                               | `preview.test.js`     | Function calls + `execFileSync` |
 | 3-language e2e (parse, export, import, validate, stats)   | `integration.test.js` | Direct + `execFileSync`         |
 | Diff computation, CLI exit codes, plural diff             | `diff.test.js`      | Function calls + `execFileSync` |
@@ -266,13 +280,19 @@ Test fixtures in `test/fixtures/` are the foundation of roundtrip tests. **When 
 | `pl-PL.po`                  | Polish PO file — matching entries with Polish translations (3 plural forms per entry)                                           |
 | `translations.csv`          | Pipe-delimited CSV — export of the above PO files                                                                               |
 | `translations-modified.csv` | Copy of `translations.csv` with intentional changes (for diff tests)                                                            |
+| `json/en.json`              | Flat JSON export of English PO — singular as strings, plurals as arrays                                                         |
+| `json/pl.json`              | Flat JSON export of Polish PO — 3-form plural arrays                                                                            |
+| `i18next/en.json`           | i18next v4 (CLDR) export of English PO — `_one`/`_other` plural suffixes                                                        |
+| `i18next/pl.json`           | i18next v4 (CLDR) export of Polish PO — `_one`/`_few`/`_many` plural suffixes                                                   |
 
 ### Rules
 
-1. **Both formats at once**: When adding a new entry, add it to **both** `.po` files AND `translations.csv` simultaneously. The roundtrip test (`roundtrip.test.js`) will fail if they're out of sync.
+1. **All formats at once**: When adding a new entry, add it to **both** `.po` files AND `translations.csv` AND re-generate `json/` and `i18next/` fixtures simultaneously. The "export matches fixture" tests will fail if they're out of sync.
 2. **Modified CSV too**: If the new entry should appear in diff tests, add it (possibly with a changed value) to `translations-modified.csv` as well.
-3. **Matching structure**: CSV must have the key in column 1, then language columns matching the `.po` file locale short codes (`en`, `pl`).
-4. **New test file**: For a new command or major feature, create `test/<feature>.test.js` following the existing pattern (`describe`/`it`, `assert/strict`, temp dir cleanup).
+3. **Regenerate JSON/i18next fixtures**: Run `node -e "require('./lib/jsonFormat').exportToJson('test/fixtures/json','test/fixtures')"` and `node -e "require('./lib/i18nextFormat').exportToI18next('test/fixtures/i18next','test/fixtures',{compatibilityJSON:4})"` after modifying `.po` files.
+4. **Integration project fixtures**: Same rule applies to `test/integration-project/json/` and `test/integration-project/i18next/` — regenerate after modifying integration `.po` files.
+5. **Matching structure**: CSV must have the key in column 1, then language columns matching the `.po` file locale short codes (`en`, `pl`).
+6. **New test file**: For a new command or major feature, create `test/<feature>.test.js` following the existing pattern (`describe`/`it`, `assert/strict`, temp dir cleanup).
 
 ---
 

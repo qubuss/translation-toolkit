@@ -3,6 +3,35 @@
 All notable changes to **translation-toolkit** are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.8.0] — 2025-02-26
+
+### Added
+
+- **`--format i18next` for `export`** — export `.po` translations to per-language i18next-compatible JSON files; singular entries become string values; plural entries use CLDR suffixes (`_one`, `_other`, `_few`, `_many`, etc.) for v4 (default), or `_plural`/`_0`/`_1`/`_2` for v3 legacy mode
+- **`--format i18next` for `import`** — import i18next JSON files back into `.po` files; auto-detects CLDR plural suffixes (v4) or legacy suffixes (v3) and maps them back to gettext `msgstr[N]` indices; supports `--merge`, `--dry-run`
+- **`--compat` flag** — specify i18next compatibility version: `--compat 4` (default, CLDR categories) or `--compat 3` (legacy `_plural`/`_N` suffixes); applies to both export and import
+- **New `lib/i18nextFormat.js` module** — `exportToI18next()`, `importFromI18next()`, `parseI18nextFile()`, `discoverI18nextFiles()` core functions; `GETTEXT_TO_CLDR` mapping for 14 languages (en, de, fr, es, it, pt, nl, hu, pl, ru, uk, cs, sk, ro) + Arabic (6 forms); zero dependencies
+- **CLDR plural mapping** — gettext form indices correctly mapped to CLDR categories per language: nplurals=2 → `one`/`other`, Polish/Russian nplurals=3 → `one`/`few`/`many`, Czech/Slovak nplurals=3 → `one`/`few`/`other`, Arabic nplurals=6 → `zero`/`one`/`two`/`few`/`many`/`other`
+
+### Tests
+
+- 346 tests across 85 suites (was 290 / 70)
+- Added static JSON and i18next fixture files for regression protection
+- Added "export matches fixture" tests for both JSON and i18next formats
+
+## [1.7.0] — 2025-02-26
+
+### Added
+
+- **`--format json` for `export`** — export `.po` translations to per-language flat JSON files (`en.json`, `pl.json`, etc.); singular entries become string values, plural entries become arrays of strings; keys with `msgctxt` use `::` separator; output is pretty-printed with 2-space indentation
+- **`--format json` for `import`** — import per-language JSON files back into `.po` files; supports `--merge`, `--dry-run`, and all existing import flags; auto-detects nested JSON and flattens with dot-separated keys
+- **New `lib/jsonFormat.js` module** — `exportToJson()`, `importFromJson()`, `parseJsonFile()`, `discoverJsonFiles()` core functions + `_flattenObject`, `_isNested` helpers; zero dependencies
+- **Nested JSON auto-flatten on import** — nested objects like `{ "menu": { "save": "Save" } }` are automatically flattened to dot-separated keys (`menu.save`); arrays are preserved as plural forms
+
+### Tests
+
+- 290 tests across 70 suites (was 257 / 62)
+
 ## [1.6.0] — 2025-02-26
 
 ### Added
@@ -184,6 +213,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Zero runtime dependencies
 - 31 tests across 12 suites
 
+[1.7.0]: https://github.com/qubuss/translation-toolkit/compare/v1.6.0...v1.7.0
+[1.8.0]: https://github.com/qubuss/translation-toolkit/compare/v1.7.0...v1.8.0
+[1.7.0]: https://github.com/qubuss/translation-toolkit/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/qubuss/translation-toolkit/compare/v1.5.2...v1.6.0
 [1.5.2]: https://github.com/qubuss/translation-toolkit/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/qubuss/translation-toolkit/compare/v1.5.0...v1.5.1

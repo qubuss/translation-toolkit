@@ -33,8 +33,11 @@ USAGE
 
 EXPORT OPTIONS
   -o, --output <file>   Output CSV file path (default: translations.csv)
+                        For --format json/i18next: output directory (default: .)
   -d, --dir <path>      Translations directory (default: auto-discover)
   -D, --delimiter <ch>  Column delimiter (default: |)
+  -f, --format <fmt>    Output format: csv (default), json, or i18next
+  --compat <ver>        i18next compatibility: 4 (default, CLDR) or 3 (legacy)
   --no-status           Omit _status column from CSV (fuzzy info)
 
 IMPORT OPTIONS
@@ -42,6 +45,8 @@ IMPORT OPTIONS
   -n, --dry-run         Show what would change without modifying any files
   -d, --dir <path>      Translations directory (default: auto-discover)
   -D, --delimiter <ch>  Column delimiter (default: |)
+  -f, --format <fmt>    Input format: csv (default), json, or i18next
+  --compat <ver>        i18next compatibility: 4 (default, CLDR) or 3 (legacy)
 
 PREVIEW OPTIONS
   -d, --dir <path>      Translations directory (default: auto-discover)
@@ -98,6 +103,11 @@ EXAMPLES
   po-csv-tool diff old.csv new.csv
   po-csv-tool diff translations.csv
   po-csv-tool diff translations.csv --dir src/i18n
+  po-csv-tool export --format json -o locales/
+  po-csv-tool import --format json locales/ --dir src/i18n
+  po-csv-tool export --format i18next -o locales/
+  po-csv-tool export --format i18next --compat 3 -o locales/
+  po-csv-tool import --format i18next locales/ --dir src/i18n
 
 AUTO-DISCOVERY
   When --dir is not specified, the tool recursively searches the current
