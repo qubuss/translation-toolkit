@@ -3,6 +3,23 @@
 All notable changes to **translation-toolkit** are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.6.0] — 2025-02-26
+
+### Added
+
+- **`_status` column in CSV export** — exported CSV now includes a `_status` column (between `key` and language columns) containing `fuzzy` for entries marked `#, fuzzy` in any language, empty otherwise; export log reports fuzzy count alongside key/plural counts
+- **`--no-status` flag for `export`** — omit the `_status` column from CSV output for backwards-compatible workflows
+- **Backwards-compatible CSV import** — `import`, `diff`, and `preview` commands auto-detect the `_status` column and skip it when parsing language values; old CSVs without `_status` continue to work unchanged
+- **Fuzzy import / unfuzzy via `_status` column** — when importing a CSV with `_status`, entries with empty status are unfuzzied (the `#, fuzzy` flag is removed from `.po` files); entries with `_status=fuzzy` keep their fuzzy flag; preserves other comment flags like `c-format`; works for both singular and plural entries
+- **`_applyFuzzyChange()` in `poParser.js`** — new internal helper that modifies `#, fuzzy` in comment buffers, supporting add/remove of the fuzzy flag while preserving other flags on the same `#,` line
+- **`patchPoFile()` comment buffering** — refactored to buffer comment/blank lines before flushing, enabling fuzzy flag manipulation when composite key is known; new 5th parameter `fuzzyChanges: Map<string, boolean>`
+- **`--json` flag for `validate`** — outputs validation results as machine-readable JSON: `{ errors: [...], warnings: [...], summary: { refLang, languages, totalKeys, totalPluralKeys, totalFuzzyKeys, errorCount, warningCount } }`; `\x04` separator replaced with `::` in JSON keys; useful for CI/CD pipelines
+- **`--severity` flag for `validate`** — filter issues by severity level: `--severity error` shows only errors (hides warnings like fuzzy entries), `--severity warning` (default) shows everything; works with both text and `--json` output
+
+### Tests
+
+- 257 tests across 62 suites (was 232 / 58)
+
 ## [1.5.2] — 2025-07-24
 
 ### Added
@@ -167,6 +184,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Zero runtime dependencies
 - 31 tests across 12 suites
 
+[1.6.0]: https://github.com/qubuss/translation-toolkit/compare/v1.5.2...v1.6.0
 [1.5.2]: https://github.com/qubuss/translation-toolkit/compare/v1.5.1...v1.5.2
 [1.5.1]: https://github.com/qubuss/translation-toolkit/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/qubuss/translation-toolkit/compare/v1.4.1...v1.5.0

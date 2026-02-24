@@ -339,8 +339,8 @@ describe('import --merge mode', () => {
     // Modify a value in the CSV
     let csvContent = fs.readFileSync(csvPath, 'utf-8');
     csvContent = csvContent.replace(
-      'simple.key|Simple value|Prosta wartość',
-      'simple.key|Updated value|Zaktualizowana wartość'
+      'simple.key||Simple value|Prosta wartość',
+      'simple.key||Updated value|Zaktualizowana wartość'
     );
     fs.writeFileSync(csvPath, csvContent);
 
@@ -367,9 +367,9 @@ describe('import --merge mode', () => {
     const csvPath = path.join(TMP, 'merge-add.csv');
     await exportToCsv(csvPath, TMP, '|');
 
-    // Add a new key
+    // Add a new key (include empty _status column)
     let csvContent = fs.readFileSync(csvPath, 'utf-8');
-    csvContent += 'brand.new.key|Brand New|Nowiutki\n';
+    csvContent += 'brand.new.key||Brand New|Nowiutki\n';
     fs.writeFileSync(csvPath, csvContent);
 
     await importFromCsv(csvPath, true, TMP, '|');
@@ -494,11 +494,11 @@ describe('plural forms round-trip', () => {
     const csvPath = path.join(TMP, 'plural-modify.csv');
     await exportToCsv(csvPath, TMP, '|');
 
-    // Modify %d file[1] for pl: "%d pliki" → "%d pliki ROUNDTRIP"
+    // Modify %d file[1] for pl: "%d pliki" \u2192 "%d pliki ROUNDTRIP" (skip _status column)
     let csvContent = fs.readFileSync(csvPath, 'utf-8');
     csvContent = csvContent.replace(
-      '%d file[1]|%d files|%d pliki',
-      '%d file[1]|%d files|%d pliki ROUNDTRIP'
+      '%d file[1]||%d files|%d pliki',
+      '%d file[1]||%d files|%d pliki ROUNDTRIP'
     );
     fs.writeFileSync(csvPath, csvContent);
 
@@ -553,5 +553,463 @@ describe('plural forms round-trip', () => {
     assert.equal(content.includes('\x04'), false, 'CSV should not contain \\x04');
     assert.ok(content.includes('notifications::You have %d new message[0]'),
       'Should use :: separator for msgctxt plural keys');
+  });
+});
+
+// ─── Fuzzy _status column ─────────────────────────────────
+
+describe('fuzzy _status column in CSV export', () => {
+  const STATUS_TMP = path.join(__dirname, '.tmp-status');
+
+  before(() => {
+    fs.mkdirSync(STATUS_TMP, { recursive: true });
+    for (const f of fs.readdirSync(FIXTURES)) {
+      if (f.endsWith('.po')) {
+        fs.copyFileSync(path.join(FIXTURES, f), path.join(STATUS_TMP, f));
+      }
+    }
+  });
+
+  after(() => {
+    fs.rmSync(STATUS_TMP, { recursive: true, force: true });
+  });
+
+  it('export includes _status column in header by default', async () => {
+    const csvPath = path.join(STATUS_TMP, 'status-header.csv');
+    await exportToCsv(csvPath, STATUS_TMP, '|');
+
+    const content = fs.readFileSync(csvPath, 'utf-8');
+    const header = content.split('\n')[0];
+    assert.equal(header, 'key|_status|en|pl', 'Header should include _status column');
+  });
+
+  it('fuzzy entries have _status=fuzzy', async () => {
+    const csvPath = path.join(STATUS_TMP, 'status-fuzzy.csv');
+    await exportToCsv(csvPath, STATUS_TMP, '|');
+
+    const content = fs.readFileSync(csvPath, 'utf-8');
+    // Fixtures have 3 fuzzy entries: commented.entry, fuzzy.entry, new.key.name
+    assert.ok(content.includes('commented.entry|fuzzy|'), 'commented.entry should be fuzzy');
+    assert.ok(content.includes('fuzzy.entry|fuzzy|'), 'fuzzy.entry should be fuzzy');
+    assert.ok(content.includes('new.key.name|fuzzy|'), 'new.key.name should be fuzzy');
+  });
+
+  it('non-fuzzy entries have empty _status', async () => {
+    const csvPath = path.join(STATUS_TMP, 'status-nonfuzzy.csv');
+    await exportToCsv(csvPath, STATUS_TMP, '|');
+
+    const content = fs.readFileSync(csvPath, 'utf-8');
+    assert.ok(content.includes('simple.key||Simple value'), 'simple.key should have empty status');
+    assert.ok(content.includes('another.key||Another value'), 'another.key should have empty status');
+  });
+
+  it('includeStatus: false omits the _status column', async () => {
+    const csvPath = path.join(STATUS_TMP, 'no-status.csv');
+    await exportToCsv(csvPath, STATUS_TMP, '|', { includeStatus: false });
+
+    const content = fs.readFileSync(csvPath, 'utf-8');
+    const header = content.split('\n')[0];
+    assert.equal(header, 'key|en|pl', 'Header should NOT include _status column');
+    assert.ok(!content.includes('|fuzzy|'), 'No fuzzy status values');
+    assert.ok(!content.includes('_status'), 'No _status anywhere');
+  });
+
+  it('export log reports fuzzy count', async () => {
+    const logs = [];
+    const origLog = console.log;
+    console.log = (...args) => logs.push(args.join(' '));
+
+    const csvPath = path.join(STATUS_TMP, 'status-log.csv');
+    await exportToCsv(csvPath, STATUS_TMP, '|');
+    console.log = origLog;
+
+    const output = logs.join('\n');
+    assert.ok(output.includes('3 fuzzy'), 'Should report 3 fuzzy keys');
+  });
+
+  it('import correctly handles CSV with _status column (round-trip)', async () => {
+    // Export (has _status column), then immediately import back
+    const csvPath = path.join(STATUS_TMP, 'status-roundtrip.csv');
+    await exportToCsv(csvPath, STATUS_TMP, '|');
+
+    // Parse originals before import
+    const originalEn = parsePo(path.join(STATUS_TMP, 'en-US.po'));
+    const originalPl = parsePo(path.join(STATUS_TMP, 'pl-PL.po'));
+
+    // Import CSV with _status column
+    await importFromCsv(csvPath, false, STATUS_TMP, '|');
+
+    // Verify all entries preserved
+    const enParsed = parsePo(path.join(STATUS_TMP, 'en-US.po'));
+    const plParsed = parsePo(path.join(STATUS_TMP, 'pl-PL.po'));
+    assert.equal(enParsed.entries.size, originalEn.entries.size,
+      'en entry count should match after status round-trip');
+    assert.equal(plParsed.entries.size, originalPl.entries.size,
+      'pl entry count should match after status round-trip');
+
+    // Check specific entries not corrupted
+    assert.equal(enParsed.entries.get('simple.key'), 'Simple value');
+    assert.equal(enParsed.entries.get('fuzzy.entry'), 'This translation needs review: %s');
+  });
+
+  it('import handles CSV without _status column (backwards compat)', async () => {
+    // Re-copy .po originals (previous test may have imported)
+    for (const f of fs.readdirSync(FIXTURES)) {
+      if (f.endsWith('.po')) {
+        fs.copyFileSync(path.join(FIXTURES, f), path.join(STATUS_TMP, f));
+      }
+    }
+
+    // Export without status, then import
+    const csvPath = path.join(STATUS_TMP, 'no-status-import.csv');
+    await exportToCsv(csvPath, STATUS_TMP, '|', { includeStatus: false });
+
+    const originalEn = parsePo(path.join(STATUS_TMP, 'en-US.po'));
+    await importFromCsv(csvPath, false, STATUS_TMP, '|');
+
+    const enParsed = parsePo(path.join(STATUS_TMP, 'en-US.po'));
+    assert.equal(enParsed.entries.size, originalEn.entries.size,
+      'entry count should match after no-status import');
+  });
+
+  it('comma delimiter export includes _status column', async () => {
+    const csvPath = path.join(STATUS_TMP, 'status-comma.csv');
+    await exportToCsv(csvPath, STATUS_TMP, ',');
+
+    const content = fs.readFileSync(csvPath, 'utf-8');
+    const header = content.split('\n')[0];
+    assert.ok(header.startsWith('key,_status,'), 'Comma-delimited header should include _status');
+    assert.ok(content.includes(',fuzzy,'), 'Fuzzy status should be present');
+  });
+
+  it('plural fuzzy entries get _status=fuzzy on all key[N] rows', async () => {
+    // Create a temp dir with a .po that has a fuzzy plural entry
+    const tmpDir = path.join(STATUS_TMP, 'fuzzy-plural');
+    fs.mkdirSync(tmpDir, { recursive: true });
+    fs.writeFileSync(path.join(tmpDir, 'en-US.po'), [
+      'msgid ""',
+      'msgstr ""',
+      '"Language: en\\n"',
+      '"Content-Type: text/plain; charset=UTF-8\\n"',
+      '"Plural-Forms: nplurals=2; plural=(n != 1);\\n"',
+      '',
+      '#, fuzzy',
+      'msgid "%d cat"',
+      'msgid_plural "%d cats"',
+      'msgstr[0] "%d cat"',
+      'msgstr[1] "%d cats"',
+      '',
+      'msgid "clean"',
+      'msgstr "Clean entry"',
+      ''
+    ].join('\n'));
+
+    const csvPath = path.join(tmpDir, 'export.csv');
+    await exportToCsv(csvPath, tmpDir, '|');
+
+    const content = fs.readFileSync(csvPath, 'utf-8');
+    const lines = content.split('\n').filter(l => l.trim());
+
+    // Find plural rows — all should be fuzzy
+    const catRows = lines.filter(l => l.includes('%d cat['));
+    assert.equal(catRows.length, 2, 'Should have 2 plural rows');
+    for (const row of catRows) {
+      assert.ok(row.includes('|fuzzy|'), `Plural row should have fuzzy status: ${row}`);
+    }
+
+    // Clean entry should NOT be fuzzy
+    const cleanRow = lines.find(l => l.startsWith('clean|'));
+    assert.ok(cleanRow, 'Should have clean entry');
+    assert.ok(cleanRow.includes('clean||'), 'Clean entry should have empty status');
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+});
+
+// ─── F2: Fuzzy import (unfuzzy / add fuzzy) ─────────────
+
+describe('fuzzy import — unfuzzy and add fuzzy via _status column', () => {
+  const FUZZY_TMP = path.join(__dirname, '.tmp-fuzzy-import');
+
+  before(() => {
+    fs.mkdirSync(FUZZY_TMP, { recursive: true });
+  });
+
+  after(() => {
+    fs.rmSync(FUZZY_TMP, { recursive: true, force: true });
+  });
+
+  /**
+   * Helper: create a minimal .po + export → CSV → modify status → import → parse result.
+   */
+  function writeFuzzyPo(dir, filename, entries) {
+    const lines = [
+      'msgid ""',
+      'msgstr ""',
+      '"Language: en\\n"',
+      '"Content-Type: text/plain; charset=UTF-8\\n"',
+      '"Plural-Forms: nplurals=2; plural=(n != 1);\\n"',
+      '',
+    ];
+    for (const e of entries) {
+      if (e.fuzzy) lines.push('#, fuzzy');
+      if (e.comment) lines.push(e.comment);
+      if (e.msgctxt) lines.push(`msgctxt "${e.msgctxt}"`);
+      lines.push(`msgid "${e.msgid}"`);
+      if (e.msgid_plural) {
+        lines.push(`msgid_plural "${e.msgid_plural}"`);
+        for (let n = 0; n < e.msgstr.length; n++) {
+          lines.push(`msgstr[${n}] "${e.msgstr[n]}"`);
+        }
+      } else {
+        lines.push(`msgstr "${e.msgstr}"`);
+      }
+      lines.push('');
+    }
+    fs.writeFileSync(path.join(dir, filename), lines.join('\n'));
+  }
+
+  it('unfuzzy: clearing _status removes #, fuzzy from .po', async () => {
+    const dir = path.join(FUZZY_TMP, 'unfuzzy1');
+    fs.mkdirSync(dir, { recursive: true });
+    writeFuzzyPo(dir, 'en-US.po', [
+      { msgid: 'reviewed', msgstr: 'Reviewed text', fuzzy: true },
+      { msgid: 'still.fuzzy', msgstr: 'Still fuzzy', fuzzy: true },
+      { msgid: 'clean', msgstr: 'Clean' },
+    ]);
+
+    // Export (will have _status column)
+    const csvPath = path.join(dir, 'export.csv');
+    await exportToCsv(csvPath, dir, '|');
+
+    // Modify CSV: clear fuzzy status for 'reviewed', keep 'still.fuzzy'
+    let csv = fs.readFileSync(csvPath, 'utf-8');
+    csv = csv.replace('reviewed|fuzzy|', 'reviewed||');
+    fs.writeFileSync(csvPath, csv);
+
+    // Import
+    await importFromCsv(csvPath, false, dir, '|');
+
+    // Verify
+    const content = fs.readFileSync(path.join(dir, 'en-US.po'), 'utf-8');
+    const parsed = parsePo(path.join(dir, 'en-US.po'));
+
+    assert.ok(!parsed.fuzzyKeys.has('reviewed'), 'reviewed should no longer be fuzzy');
+    assert.ok(parsed.fuzzyKeys.has('still.fuzzy'), 'still.fuzzy should remain fuzzy');
+    assert.ok(!parsed.fuzzyKeys.has('clean'), 'clean should not be fuzzy');
+
+    // Verify the #, fuzzy line was actually removed from file
+    const reviewedIdx = content.indexOf('msgid "reviewed"');
+    const beforeReviewed = content.slice(Math.max(0, reviewedIdx - 50), reviewedIdx);
+    assert.ok(!beforeReviewed.includes('#, fuzzy'), '#, fuzzy should be removed before reviewed entry');
+
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('add fuzzy: setting _status=fuzzy adds #, fuzzy to clean entry', async () => {
+    const dir = path.join(FUZZY_TMP, 'addfuzzy1');
+    fs.mkdirSync(dir, { recursive: true });
+    writeFuzzyPo(dir, 'en-US.po', [
+      { msgid: 'make.fuzzy', msgstr: 'Will become fuzzy' },
+      { msgid: 'keep.clean', msgstr: 'Stays clean' },
+    ]);
+
+    const csvPath = path.join(dir, 'export.csv');
+    await exportToCsv(csvPath, dir, '|');
+
+    // Modify CSV: add fuzzy status
+    let csv = fs.readFileSync(csvPath, 'utf-8');
+    csv = csv.replace('make.fuzzy||', 'make.fuzzy|fuzzy|');
+    fs.writeFileSync(csvPath, csv);
+
+    await importFromCsv(csvPath, false, dir, '|');
+
+    const parsed = parsePo(path.join(dir, 'en-US.po'));
+    assert.ok(parsed.fuzzyKeys.has('make.fuzzy'), 'make.fuzzy should now be fuzzy');
+    assert.ok(!parsed.fuzzyKeys.has('keep.clean'), 'keep.clean should remain clean');
+
+    // Verify #, fuzzy was added to file
+    const content = fs.readFileSync(path.join(dir, 'en-US.po'), 'utf-8');
+    const makeIdx = content.indexOf('msgid "make.fuzzy"');
+    const beforeMake = content.slice(Math.max(0, makeIdx - 30), makeIdx);
+    assert.ok(beforeMake.includes('#, fuzzy'), '#, fuzzy should be present before make.fuzzy');
+
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('unfuzzy preserves other flags on #, line (e.g. c-format)', async () => {
+    const dir = path.join(FUZZY_TMP, 'otherflags');
+    fs.mkdirSync(dir, { recursive: true });
+
+    // Write .po with #, fuzzy, c-format
+    const poContent = [
+      'msgid ""',
+      'msgstr ""',
+      '"Language: en\\n"',
+      '"Content-Type: text/plain; charset=UTF-8\\n"',
+      '',
+      '#, fuzzy, c-format',
+      'msgid "formatted"',
+      'msgstr "Value %s"',
+      ''
+    ].join('\n');
+    fs.writeFileSync(path.join(dir, 'en-US.po'), poContent);
+
+    const csvPath = path.join(dir, 'export.csv');
+    await exportToCsv(csvPath, dir, '|');
+
+    // Clear fuzzy status
+    let csv = fs.readFileSync(csvPath, 'utf-8');
+    csv = csv.replace('formatted|fuzzy|', 'formatted||');
+    fs.writeFileSync(csvPath, csv);
+
+    await importFromCsv(csvPath, false, dir, '|');
+
+    const content = fs.readFileSync(path.join(dir, 'en-US.po'), 'utf-8');
+    const parsed = parsePo(path.join(dir, 'en-US.po'));
+
+    assert.ok(!parsed.fuzzyKeys.has('formatted'), 'should no longer be fuzzy');
+    // c-format flag should be preserved
+    assert.ok(content.includes('#, c-format'), 'c-format flag should be preserved');
+    assert.ok(!content.includes('fuzzy'), 'fuzzy should be completely removed');
+
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('unfuzzy works for plural entries', async () => {
+    const dir = path.join(FUZZY_TMP, 'plural-unfuzzy');
+    fs.mkdirSync(dir, { recursive: true });
+    writeFuzzyPo(dir, 'en-US.po', [
+      { msgid: '%d item', msgid_plural: '%d items', msgstr: ['%d item', '%d items'], fuzzy: true },
+      { msgid: 'plain', msgstr: 'Plain' },
+    ]);
+
+    const csvPath = path.join(dir, 'export.csv');
+    await exportToCsv(csvPath, dir, '|');
+
+    // Clear fuzzy status for plural key
+    let csv = fs.readFileSync(csvPath, 'utf-8');
+    csv = csv.replace('%d item[0]|fuzzy|', '%d item[0]||');
+    csv = csv.replace('%d item[1]|fuzzy|', '%d item[1]||');
+    fs.writeFileSync(csvPath, csv);
+
+    await importFromCsv(csvPath, false, dir, '|');
+
+    const parsed = parsePo(path.join(dir, 'en-US.po'));
+    assert.ok(!parsed.fuzzyKeys.has('%d item'), 'plural entry should no longer be fuzzy');
+
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('no fuzzy changes when CSV has no _status column', async () => {
+    const dir = path.join(FUZZY_TMP, 'no-status-col');
+    fs.mkdirSync(dir, { recursive: true });
+    writeFuzzyPo(dir, 'en-US.po', [
+      { msgid: 'stays.fuzzy', msgstr: 'Should stay fuzzy', fuzzy: true },
+      { msgid: 'clean', msgstr: 'Clean' },
+    ]);
+
+    // Export WITHOUT status column
+    const csvPath = path.join(dir, 'export.csv');
+    await exportToCsv(csvPath, dir, '|', { includeStatus: false });
+
+    await importFromCsv(csvPath, false, dir, '|');
+
+    const parsed = parsePo(path.join(dir, 'en-US.po'));
+    // Fuzzy flag should be untouched — no status column means no changes
+    assert.ok(parsed.fuzzyKeys.has('stays.fuzzy'), 'fuzzy should be preserved when no _status column');
+
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('round-trip: export with status → import preserves fuzzy flags', async () => {
+    const dir = path.join(FUZZY_TMP, 'roundtrip-fuzzy');
+    fs.mkdirSync(dir, { recursive: true });
+    writeFuzzyPo(dir, 'en-US.po', [
+      { msgid: 'fuzzy.one', msgstr: 'Fuzzy 1', fuzzy: true },
+      { msgid: 'fuzzy.two', msgstr: 'Fuzzy 2', fuzzy: true },
+      { msgid: 'clean.one', msgstr: 'Clean 1' },
+    ]);
+
+    // Export → import unchanged → verify fuzzy flags preserved
+    const csvPath = path.join(dir, 'export.csv');
+    await exportToCsv(csvPath, dir, '|');
+    await importFromCsv(csvPath, false, dir, '|');
+
+    const parsed = parsePo(path.join(dir, 'en-US.po'));
+    assert.ok(parsed.fuzzyKeys.has('fuzzy.one'), 'fuzzy.one should remain fuzzy');
+    assert.ok(parsed.fuzzyKeys.has('fuzzy.two'), 'fuzzy.two should remain fuzzy');
+    assert.ok(!parsed.fuzzyKeys.has('clean.one'), 'clean.one should remain clean');
+
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('import log reports fuzzy info when _status column present', async () => {
+    const dir = path.join(FUZZY_TMP, 'log-count');
+    fs.mkdirSync(dir, { recursive: true });
+    writeFuzzyPo(dir, 'en-US.po', [
+      { msgid: 'reviewed', msgstr: 'Reviewed', fuzzy: true },
+      { msgid: 'clean', msgstr: 'Clean' },
+    ]);
+
+    const csvPath = path.join(dir, 'export.csv');
+    await exportToCsv(csvPath, dir, '|');
+
+    const logs = [];
+    const origLog = console.log;
+    console.log = (...args) => logs.push(args.join(' '));
+    await importFromCsv(csvPath, false, dir, '|');
+    console.log = origLog;
+
+    const output = logs.join('\n');
+    // Should report _status column detection
+    assert.ok(output.includes('_status column'), 'Should report _status column detected');
+
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('multi-language: unfuzzy removes flag from all language files', async () => {
+    const dir = path.join(FUZZY_TMP, 'multi-lang');
+    fs.mkdirSync(dir, { recursive: true });
+
+    // English: reviewed is fuzzy
+    writeFuzzyPo(dir, 'en-US.po', [
+      { msgid: 'reviewed', msgstr: 'Reviewed EN', fuzzy: true },
+      { msgid: 'clean', msgstr: 'Clean EN' },
+    ]);
+    // Polish: reviewed is also fuzzy
+    const plContent = [
+      'msgid ""',
+      'msgstr ""',
+      '"Language: pl\\n"',
+      '"Content-Type: text/plain; charset=UTF-8\\n"',
+      '"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\\n"',
+      '',
+      '#, fuzzy',
+      'msgid "reviewed"',
+      'msgstr "Przejrzane PL"',
+      '',
+      'msgid "clean"',
+      'msgstr "Czyste PL"',
+      ''
+    ].join('\n');
+    fs.writeFileSync(path.join(dir, 'pl-PL.po'), plContent);
+
+    const csvPath = path.join(dir, 'export.csv');
+    await exportToCsv(csvPath, dir, '|');
+
+    // Clear fuzzy
+    let csv = fs.readFileSync(csvPath, 'utf-8');
+    csv = csv.replace('reviewed|fuzzy|', 'reviewed||');
+    fs.writeFileSync(csvPath, csv);
+
+    await importFromCsv(csvPath, false, dir, '|');
+
+    const enParsed = parsePo(path.join(dir, 'en-US.po'));
+    const plParsed = parsePo(path.join(dir, 'pl-PL.po'));
+    assert.ok(!enParsed.fuzzyKeys.has('reviewed'), 'en: reviewed should no longer be fuzzy');
+    assert.ok(!plParsed.fuzzyKeys.has('reviewed'), 'pl: reviewed should no longer be fuzzy');
+
+    fs.rmSync(dir, { recursive: true, force: true });
   });
 });

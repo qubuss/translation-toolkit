@@ -35,6 +35,7 @@ EXPORT OPTIONS
   -o, --output <file>   Output CSV file path (default: translations.csv)
   -d, --dir <path>      Translations directory (default: auto-discover)
   -D, --delimiter <ch>  Column delimiter (default: |)
+  --no-status           Omit _status column from CSV (fuzzy info)
 
 IMPORT OPTIONS
   -m, --merge           Keep existing keys not in CSV (default: replace all)
@@ -51,6 +52,8 @@ PREVIEW OPTIONS
 
 VALIDATE OPTIONS
   -d, --dir <path>      Translations directory (default: auto-discover)
+  --json                Output results as JSON (for CI/tooling integration)
+  --severity <level>    Filter issues: "error" or "warning" (default: warning = all)
 
 STATS OPTIONS
   -d, --dir <path>      Translations directory (default: auto-discover)
@@ -88,6 +91,8 @@ EXAMPLES
   translation-toolkit preview --static -o docs/preview.html
   translation-toolkit validate
   translation-toolkit validate --dir src/i18n
+  translation-toolkit validate --json
+  translation-toolkit validate --severity error
   translation-toolkit stats
   translation-toolkit stats --dir src/i18n
   translation-toolkit diff old.csv new.csv

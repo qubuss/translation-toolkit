@@ -8,7 +8,7 @@
 **Repozytorium:** https://github.com/qubuss/translation-toolkit
 **Zero dependencies** — kluczowy wyróżnik
 **Aktualna wersja:** v1.5.2 (23.02.2026)
-**Testy:** 204 testy / 50 suite'ów
+**Testy:** 241 testów / 59 suite'ów
 
 ---
 
@@ -78,64 +78,62 @@ Cel: fuzzy info w pipeline CSV, ulepszony validate, lepszy DX.
 > **Kontekst:** Fuzzy jest wykrywane w validate/stats/preview (v1.5.2), ale brakuje go w CSV export/import.
 > Użytkownicy edytujący CSV w arkuszach nie widzą które wpisy są fuzzy i nie mogą oznaczyć unfuzzy.
 
-#### F1. Fuzzy w CSV export
+#### F1. Fuzzy w CSV export ✅ DONE
 
-**Priorytet: WYSOKI** | **Szacunek: 0.5 dnia**
+**Priorytet: WYSOKI** | **Szacunek: 0.5 dnia** | **Zrobione: 23.02.2026**
 
-Dwie opcje do rozważenia:
-- **Opcja A: Kolumna `_status`** — `key|_status|en|pl` → wartość `fuzzy` lub pusta
-- **Opcja B: Sufiks `[fuzzy]`** — `key[fuzzy]|en|pl` (analogicznie do `key[N]` plural)
+Wybrano **Opcję A: Kolumna `_status`** — `key|_status|en|pl` → wartość `fuzzy` lub pusta.
 
-> **Rekomendacja:** Opcja A (kolumna `_status`) — bardziej elastyczna, łatwiejsza do filtrowania w arkuszach, nie koliduje z `[N]` plural.
+- [x] Export: kolumna `_status` między `key` a językami — `fuzzy` jeśli entry ma `#, fuzzy` w DOWOLNYM języku
+- [x] Flaga `--no-status` do pominięcia kolumny (backwards compat)
+- [x] Import/diff/preview auto-detect `_status` column — backwards compat z CSV bez `_status`
+- [x] 9 nowych testów (241 / 59), README, CLI help, CHANGELOG [Unreleased]
 
-- [ ] Export: dodaj kolumnę `_status` z wartością `fuzzy` dla fuzzy entries
-- [ ] Flaga `--no-status` do pominięcia kolumny (backwards compat)
-- [ ] Aktualizacja testów, README
+Pliki zmienione: `lib/export.js`, `lib/import.js`, `lib/diff.js`, `lib/preview.js`, `test/roundtrip.test.js`, `test/fixtures/*.csv`
 
-Pliki do zmiany: `lib/export.js`, `test/roundtrip.test.js`
+#### F2. Fuzzy w CSV import (unfuzzy) ✅ DONE
 
-#### F2. Fuzzy w CSV import (unfuzzy)
+**Priorytet: WYSOKI** | **Szacunek: 0.5 dnia** | **Zrobione: 26.02.2026**
 
-**Priorytet: WYSOKI** | **Szacunek: 0.5 dnia**
+- [x] Import: jeśli CSV ma kolumnę `_status` — użyj jej
+- [x] Jeśli `_status` jest pusta/brak → usuń `#, fuzzy` z wpisu (unfuzzy)
+- [x] Jeśli `_status` == `fuzzy` → zachowaj `#, fuzzy`
+- [x] `patchPoFile()` — nowa logika: buforowanie komentarzy + `_applyFuzzyChange()` + `fuzzyChanges` 5th param
+- [x] 8 nowych testów w `roundtrip.test.js`
 
-- [ ] Import: jeśli CSV ma kolumnę `_status` — użyj jej
-- [ ] Jeśli `_status` jest pusta/brak → usuń `#, fuzzy` z wpisu (unfuzzy)
-- [ ] Jeśli `_status` == `fuzzy` → zachowaj `#, fuzzy`
-- [ ] `patchPoFile()` — nowa logika: usuwanie/dodawanie flagi `fuzzy` w komentarzach
-- [ ] Aktualizacja testów
+Pliki zmienione: `lib/import.js`, `lib/poParser.js`, `test/roundtrip.test.js`
 
-Pliki do zmiany: `lib/import.js`, `lib/poParser.js`, `test/roundtrip.test.js`
+#### F3. Validate `--json` output ✅ DONE
 
-#### F3. Validate `--json` output
+**Priorytet: ŚREDNI** | **Szacunek: 0.5 dnia** | **Zrobione: 26.02.2026**
 
-**Priorytet: ŚREDNI** | **Szacunek: 0.5 dnia**
+- [x] `--json` flag → JSON output zamiast kolorowego tekstu
+- [x] Format: `{ "errors": [...], "warnings": [...], "summary": { refLang, languages, totalKeys, totalPluralKeys, totalFuzzyKeys, errorCount, warningCount } }`
+- [x] \x04 → `::` w kluczach JSON
+- [x] 4 testy CLI w `validate.test.js`
 
-- [ ] `--json` flag → JSON output zamiast kolorowego tekstu
-- [ ] Format: `{ "errors": [...], "warnings": [...], "summary": { ... } }`
-- [ ] Przydatne w CI/CD — parsowalne przez inne narzędzia
-- [ ] Aktualizacja CLI help, README
+Pliki zmienione: `lib/validate.js`, `bin/translation-toolkit.js`, `bin/po-csv-tool.js`
 
-Pliki do zmiany: `lib/validate.js`, `bin/translation-toolkit.js`, `bin/po-csv-tool.js`
+#### F4. Validate `--severity` filter ✅ DONE
 
-#### F4. Validate `--severity` filter
+**Priorytet: NISKI** | **Szacunek: 0.25 dnia** | **Zrobione: 26.02.2026**
 
-**Priorytet: NISKI** | **Szacunek: 0.25 dnia**
+- [x] `--severity error` → pokazuj tylko errory (ukryj warnings jak fuzzy)
+- [x] `--severity warning` → pokazuj warnings i errory (default)
+- [x] Działa z `--json` i zwykłym wyjściem
+- [x] 4 testy CLI w `validate.test.js`
 
-- [ ] `--severity error` → pokazuj tylko errory (ukryj warnings jak fuzzy)
-- [ ] `--severity warning` → pokazuj warnings i errory
-- [ ] Default: `warning` (wszystko)
-- [ ] Aktualizacja CLI help
+Pliki zmienione: `lib/validate.js`
 
-Pliki do zmiany: `lib/validate.js`
+#### F5. Integration test project ✅ DONE
 
-#### F5. Integration test project
+**Priorytet: WYSOKI** | **Szacunek: 0.5 dnia** | **Zrobione: 23.02.2026**
 
-**Priorytet: WYSOKI** | **Szacunek: 0.5 dnia**
-
-- [ ] `test/integration-project/` — syntetyczny projekt z 3 językami (en/pl/de)
-- [ ] ~80-100 kluczy z: pluralami, fuzzy, msgctxt, multiline, HTML, Unicode, edge cases
-- [ ] Skrypt `test/integration.test.js` — automatyczne testy na tym projekcie
-- [ ] Uzupełnia `test/fixtures/` (unit testy) o realistyczny scenariusz end-to-end
+- [x] `test/integration-project/` — syntetyczny projekt z 3 językami (en/pl/de)
+- [x] 104 singular + 8 plural kluczy z: fuzzy (7/lang), msgctxt (6), multiline, HTML, Unicode, edge cases
+- [x] `test/integration.test.js` — 28 testów (parse, export, import, round-trip, validate, stats, diff, preview)
+- [x] Full test-prompt.md run — ALL 40+ checks passed
+- [x] Anomalia A1: en/de zyskują puste `msgstr[2]` po round-trip z pl (nplurals=3) — known, nie-blocker
 
 #### F6. Publikacja v1.6.0
 
@@ -193,14 +191,14 @@ Cel: rozszerzenie o eksport/import do JSON i i18next. Zmienia charakter paczki z
 
 ## 2. Podsumowanie szacunków
 
-| Faza            | Zakres                                               | Szacunek   | Status                         |
-| --------------- | ---------------------------------------------------- | ---------- | ------------------------------ |
-| **Faza 1**      | multiline + msgctxt + testy                          | ~3-4 dni   | ✅ v1.0–v1.1 (20.02.2026)      |
-| **Faza 1.x**    | preview, watch, static, --ci, bugfixes               | ~5 dni     | ✅ v1.2–v1.4.1 (22.02.2026)    |
-| **Faza 2**      | plural forms (fix data loss)                         | ~3 dni     | ✅ v1.5.0 (23.02.2026)         |
-| **v1.5.1–1.5.2**| delimiter, merge, fuzzy, tests                       | ~1.5 dni   | ✅ v1.5.2 (23.02.2026)         |
-| **v1.6.0**      | fuzzy CSV, validate --json/--severity, integration   | ~2.5 dni   | ⏳ następna                     |
-| **Faza 3**      | JSON + i18next + cross-validate                      | ~5-6 dni   | 🔮 przyszłość                   |
+| Faza             | Zakres                                 | Szacunek | Status                               |
+| ---------------- | -------------------------------------- | -------- | ------------------------------------ |
+| **Faza 1**       | multiline + msgctxt + testy            | ~3-4 dni | ✅ v1.0–v1.1 (20.02.2026)            |
+| **Faza 1.x**     | preview, watch, static, --ci, bugfixes | ~5 dni   | ✅ v1.2–v1.4.1 (22.02.2026)          |
+| **Faza 2**       | plural forms (fix data loss)           | ~3 dni   | ✅ v1.5.0 (23.02.2026)               |
+| **v1.5.1–1.5.2** | delimiter, merge, fuzzy, tests         | ~1.5 dni | ✅ v1.5.2 (23.02.2026)               |
+| **v1.6.0**       | fuzzy CSV, validate --json/--severity  | ~1.5 dni | ✅ DONE (F1-F4 all complete, 257/62) |
+| **Faza 3**       | JSON + i18next + cross-validate        | ~5-6 dni | 🔮 przyszłość                        |
 
 **Dotychczasowy czas**: ~12-13 dni (Faza 1 + 1.x + 2 + v1.5.1–1.5.2)
 **Pozostało**: ~2.5 dni (v1.6.0) + ~5-6 dni (Faza 3)
@@ -209,37 +207,40 @@ Cel: rozszerzenie o eksport/import do JSON i i18next. Zmienia charakter paczki z
 
 ## 3. Decyzje podjęte
 
-| Temat                      | Decyzja                                                       | Data       |
-| -------------------------- | ------------------------------------------------------------- | ---------- |
-| Nazwa paczki               | `translation-toolkit`                                         | 20.02.2026 |
-| Kolejność prac             | Faza 1 → 1.x → 2 → v1.6.0 → Faza 3                           | 20.02.2026 |
-| Plural forms data loss     | parsePo() cicho gubił msgid_plural/msgstr[N] — naprawione w v1.5.0 | 22.02.2026 |
-| Zero-dependency            | Utrzymujemy — kluczowy wyróżnik                               | 20.02.2026 |
-| Plural forms w CSV         | Osobne wiersze z `key[N]` sufiksem                            | 20.02.2026 |
-| Separator msgctxt          | `::` (np. `menu::Open`, wewnętrznie `\x04`)                   | 20.02.2026 |
-| Static preview             | `--static` → `translation-preview/index.html`                 | 22.02.2026 |
-| Fuzzy w CSV                | Kolumna `_status` (nie sufiks) — do potwierdzenia w v1.6.0    | 23.02.2026 |
-| Integration test project   | `test/integration-project/` — 3 języki, pełne edge cases      | 23.02.2026 |
-| v1.6.0 scope               | Fuzzy CSV + validate --json + --severity + integration tests   | 23.02.2026 |
-| Real-world test prompt     | `test-prompt.md` — 40+ checków + 16 regresji + anomalie       | 23.02.2026 |
+| Temat                    | Decyzja                                                            | Data       |
+| ------------------------ | ------------------------------------------------------------------ | ---------- |
+| Nazwa paczki             | `translation-toolkit`                                              | 20.02.2026 |
+| Kolejność prac           | Faza 1 → 1.x → 2 → v1.6.0 → Faza 3                                 | 20.02.2026 |
+| Plural forms data loss   | parsePo() cicho gubił msgid_plural/msgstr[N] — naprawione w v1.5.0 | 22.02.2026 |
+| Zero-dependency          | Utrzymujemy — kluczowy wyróżnik                                    | 20.02.2026 |
+| Plural forms w CSV       | Osobne wiersze z `key[N]` sufiksem                                 | 20.02.2026 |
+| Separator msgctxt        | `::` (np. `menu::Open`, wewnętrznie `\x04`)                        | 20.02.2026 |
+| Static preview           | `--static` → `translation-preview/index.html`                      | 22.02.2026 |
+| Fuzzy w CSV              | Kolumna `_status` (nie sufiks) — do potwierdzenia w v1.6.0         | 23.02.2026 |
+| Integration test project | `test/integration-project/` — 3 języki, pełne edge cases           | 23.02.2026 |
+| v1.6.0 scope             | Fuzzy CSV + validate --json + --severity + integration tests       | 23.02.2026 |
+| Real-world test prompt   | `test-prompt.md` — 40+ checków + 16 regresji + anomalie            | 23.02.2026 |
 
 ## 4. Otwarte pytania
 
-- **Fuzzy w CSV format** — kolumna `_status` vs sufiks `[fuzzy]`? (rekomendacja: kolumna)
+- **Fuzzy w CSV format** — kolumna `_status` vs sufiks `[fuzzy]`? (rekomendacja: kolumna) → **decyzja: kolumna `_status`**
 - **Fuzzy unfuzzy** — auto-unfuzzy przy import jeśli tłumaczenie zmienione? czy explicit via `_status`?
 - **Validate --json schema** — ustalić dokładny format JSON (pod CI tools)
-- **Integration test project** — ile kluczy, jakie edge cases, jakie języki (en/pl/de? + ar?)
+- ~~**Integration test project** — ile kluczy, jakie edge cases, jakie języki~~ → **DONE: 112 kluczy, en/pl/de, 28 testów**
+- **A1: Extra plural forms** — en/de zyskują puste `msgstr[2]` przy round-trip z pl (nplurals=3). Opcje: `--strip-extra-plural-forms` flag, lub inteligentne pomijanie pustych form w eksporcie.
 
 ## 5. Historia wydań
 
-| Wersja  | Data       | Kluczowe zmiany                                                | Testy      |
-| ------- | ---------- | -------------------------------------------------------------- | ---------- |
-| v1.0.0  | 20.02.2026 | Initial release — 6 commands, multiline, msgctxt               | 31 / 12    |
-| v1.2.0  | 20.02.2026 | Preview server, --watch, port auto-increment                   | 69 / 16    |
-| v1.3.0  | 21.02.2026 | --watch fix (fs), --dry-run, port auto-increment               | 71 / 16    |
-| v1.3.2  | 21.02.2026 | Plural-Forms, blank lines, comments preservation               | 71 / 16    |
-| v1.4.0  | 22.02.2026 | --static HTML, sticky header, --ci                             | 91 / 20    |
-| v1.4.1  | 23.02.2026 | Static → folder, --exit-zero, port fix                         | 96 / 22    |
-| v1.5.0  | 23.02.2026 | Plural forms — full pipeline (export/import/validate/stats/preview/diff) | 126 / 27   |
-| v1.5.1  | 23.02.2026 | Custom delimiter -D, --merge mode, test expansion              | 187 / 46   |
-| v1.5.2  | 23.02.2026 | Fuzzy detection (validate/stats/preview), A2/A3 fixes          | 204 / 50   |
+| Wersja     | Data       | Kluczowe zmiany                                                          | Testy    |
+| ---------- | ---------- | ------------------------------------------------------------------------ | -------- |
+| v1.0.0     | 20.02.2026 | Initial release — 6 commands, multiline, msgctxt                         | 31 / 12  |
+| v1.2.0     | 20.02.2026 | Preview server, --watch, port auto-increment                             | 69 / 16  |
+| v1.3.0     | 21.02.2026 | --watch fix (fs), --dry-run, port auto-increment                         | 71 / 16  |
+| v1.3.2     | 21.02.2026 | Plural-Forms, blank lines, comments preservation                         | 71 / 16  |
+| v1.4.0     | 22.02.2026 | --static HTML, sticky header, --ci                                       | 91 / 20  |
+| v1.4.1     | 23.02.2026 | Static → folder, --exit-zero, port fix                                   | 96 / 22  |
+| v1.5.0     | 23.02.2026 | Plural forms — full pipeline (export/import/validate/stats/preview/diff) | 126 / 27 |
+| v1.5.1     | 23.02.2026 | Custom delimiter -D, --merge mode, test expansion                        | 187 / 46 |
+| v1.5.2     | 23.02.2026 | Fuzzy detection (validate/stats/preview), A2/A3 fixes                    | 204 / 50 |
+| v1.5.2+    | 23.02.2026 | Integration test project (3 langs, 112 keys, 28 tests)                   | 232 / 58 |
+| v1.6.0-dev | 23.02.2026 | F1: \_status column in CSV export (fuzzy info)                           | 241 / 59 |

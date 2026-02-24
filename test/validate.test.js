@@ -600,3 +600,272 @@ describe('validateTranslations — fuzzy detection', () => {
     assert.equal(result.totalFuzzyKeys, 0, 'zero fuzzy keys');
   });
 });
+
+// ─── --json output (F3) ──────────────────────────────────
+
+describe('validate --json CLI flag', () => {
+  const { execFileSync } = require('child_process');
+  const BIN = path.join(__dirname, '..', 'bin', 'translation-toolkit.js');
+
+  it('outputs valid JSON with errors, warnings, summary', () => {
+    const dir = path.join(TMP, 'json-basic');
+    fs.mkdirSync(dir, { recursive: true });
+    writePo(path.join(dir, 'en-US.po'), {
+      language: 'en',
+      entries: [
+        { msgid: 'hello', msgstr: 'Hello' },
+        { msgid: 'world', msgstr: 'World' },
+      ],
+    });
+    writePo(path.join(dir, 'pl-PL.po'), {
+      language: 'pl',
+      entries: [
+        { msgid: 'hello', msgstr: 'Cześć' },
+        // 'world' missing → error
+      ],
+    });
+
+    let output;
+    try {
+      output = execFileSync(process.execPath, [BIN, 'validate', '--dir', dir, '--json'], {
+        encoding: 'utf-8',
+      });
+    } catch (err) {
+      // exit 1 because of error, but stdout has JSON
+      output = err.stdout;
+    }
+
+    const json = JSON.parse(output);
+    assert.ok(Array.isArray(json.errors), 'should have errors array');
+    assert.ok(Array.isArray(json.warnings), 'should have warnings array');
+    assert.ok(json.summary, 'should have summary object');
+    assert.equal(json.summary.refLang, 'en');
+    assert.ok(json.summary.languages.includes('en'));
+    assert.ok(json.summary.languages.includes('pl'));
+    assert.equal(json.summary.totalKeys, 2);
+    assert.ok(json.summary.errorCount > 0, 'should have errors');
+  });
+
+  it('JSON contains no ANSI escape codes', () => {
+    const dir = path.join(TMP, 'json-no-ansi');
+    fs.mkdirSync(dir, { recursive: true });
+    writePo(path.join(dir, 'en-US.po'), {
+      language: 'en',
+      entries: [{ msgid: 'hello', msgstr: 'Hello' }],
+    });
+    writePo(path.join(dir, 'pl-PL.po'), {
+      language: 'pl',
+      entries: [{ msgid: 'hello', msgstr: 'Cześć' }],
+    });
+
+    const output = execFileSync(process.execPath, [BIN, 'validate', '--dir', dir, '--json'], {
+      encoding: 'utf-8',
+    });
+    assert.ok(!output.includes('\x1b['), 'JSON output should not contain ANSI codes');
+    const json = JSON.parse(output);
+    assert.equal(json.summary.errorCount, 0);
+    assert.equal(json.summary.warningCount, 0);
+  });
+
+  it('JSON errors have correct structure', () => {
+    const dir = path.join(TMP, 'json-structure');
+    fs.mkdirSync(dir, { recursive: true });
+    writePo(path.join(dir, 'en-US.po'), {
+      language: 'en',
+      entries: [
+        { msgid: 'hello', msgstr: 'Hello {{name}}' },
+        { msgid: 'bye', msgstr: 'Goodbye' },
+      ],
+    });
+    writePo(path.join(dir, 'pl-PL.po'), {
+      language: 'pl',
+      entries: [
+        { msgid: 'hello', msgstr: 'Cześć' }, // missing {{name}}
+        { msgid: 'bye', msgstr: '' },          // empty
+      ],
+    });
+
+    let output;
+    try {
+      output = execFileSync(process.execPath, [BIN, 'validate', '--dir', dir, '--json'], {
+        encoding: 'utf-8',
+      });
+    } catch (err) {
+      output = err.stdout;
+    }
+
+    const json = JSON.parse(output);
+    for (const err of json.errors) {
+      assert.ok(err.type, 'error should have type');
+      assert.ok(err.lang, 'error should have lang');
+      assert.ok(err.key !== undefined, 'error should have key');
+      assert.ok(err.message, 'error should have message');
+    }
+    for (const warn of json.warnings) {
+      assert.ok(warn.type, 'warning should have type');
+      assert.ok(warn.lang, 'warning should have lang');
+    }
+  });
+
+  it('JSON replaces \\x04 with :: in keys', () => {
+    const dir = path.join(TMP, 'json-ctxt');
+    fs.mkdirSync(dir, { recursive: true });
+    writePo(path.join(dir, 'en-US.po'), {
+      language: 'en',
+      entries: [
+        { msgid: 'save', msgstr: 'Save', msgctxt: 'menu' },
+      ],
+    });
+    writePo(path.join(dir, 'pl-PL.po'), {
+      language: 'pl',
+      entries: [
+        // missing msgctxt entry → error
+      ],
+    });
+
+    let output;
+    try {
+      output = execFileSync(process.execPath, [BIN, 'validate', '--dir', dir, '--json'], {
+        encoding: 'utf-8',
+      });
+    } catch (err) {
+      output = err.stdout;
+    }
+
+    const json = JSON.parse(output);
+    const allKeys = [...json.errors, ...json.warnings].map(i => i.key);
+    for (const key of allKeys) {
+      assert.ok(!key.includes('\x04'), 'JSON keys should not contain \\x04');
+    }
+    // The menu::save key should appear
+    assert.ok(allKeys.some(k => k.includes('menu::save')), 'should show menu::save with :: separator');
+  });
+});
+
+// ─── --severity filter (F4) ──────────────────────────────
+
+describe('validate --severity CLI flag', () => {
+  const { execFileSync } = require('child_process');
+  const BIN = path.join(__dirname, '..', 'bin', 'translation-toolkit.js');
+
+  it('--severity error hides warnings from text output', () => {
+    const dir = path.join(TMP, 'sev-text');
+    fs.mkdirSync(dir, { recursive: true });
+    writePo(path.join(dir, 'en-US.po'), {
+      language: 'en',
+      entries: [
+        { msgid: 'hello', msgstr: 'Hello' },
+        { msgid: 'fuzzy.one', msgstr: 'Fuzzy', flags: 'fuzzy' },
+      ],
+    });
+    writePo(path.join(dir, 'pl-PL.po'), {
+      language: 'pl',
+      entries: [
+        { msgid: 'hello', msgstr: 'Cześć' },
+        { msgid: 'fuzzy.one', msgstr: 'Niejasne', flags: 'fuzzy' },
+      ],
+    });
+
+    // No errors, only fuzzy warnings → should exit 0
+    const output = execFileSync(process.execPath, [BIN, 'validate', '--dir', dir, '--severity', 'error'], {
+      encoding: 'utf-8',
+    });
+    // No fuzzy-entry issues should appear in the output (they are warnings)
+    assert.ok(!output.includes('fuzzy entry'), 'should not show fuzzy entry issues with --severity error');
+    assert.ok(output.includes('No issues found'), 'should report no issues when only warnings exist and --severity error');
+  });
+
+  it('--severity error filters JSON output too', () => {
+    const dir = path.join(TMP, 'sev-json');
+    fs.mkdirSync(dir, { recursive: true });
+    writePo(path.join(dir, 'en-US.po'), {
+      language: 'en',
+      entries: [
+        { msgid: 'hello', msgstr: 'Hello' },
+        { msgid: 'bye', msgstr: 'Bye' },
+        { msgid: 'fuzzy.one', msgstr: 'Fuzzy', flags: 'fuzzy' },
+      ],
+    });
+    writePo(path.join(dir, 'pl-PL.po'), {
+      language: 'pl',
+      entries: [
+        { msgid: 'hello', msgstr: 'Cześć' },
+        // 'bye' missing → error
+        { msgid: 'fuzzy.one', msgstr: 'Niejasne', flags: 'fuzzy' },
+      ],
+    });
+
+    let output;
+    try {
+      output = execFileSync(process.execPath, [BIN, 'validate', '--dir', dir, '--json', '--severity', 'error'], {
+        encoding: 'utf-8',
+      });
+    } catch (err) {
+      output = err.stdout;
+    }
+
+    const json = JSON.parse(output);
+    assert.equal(json.warnings.length, 0, 'warnings should be filtered out');
+    assert.ok(json.errors.length > 0, 'errors should still be present');
+    assert.ok(json.errors.some(e => e.type === 'missing-key'), 'should have missing-key error');
+  });
+
+  it('--severity warning (default) shows all issues', () => {
+    const dir = path.join(TMP, 'sev-default');
+    fs.mkdirSync(dir, { recursive: true });
+    writePo(path.join(dir, 'en-US.po'), {
+      language: 'en',
+      entries: [
+        { msgid: 'hello', msgstr: 'Hello' },
+        { msgid: 'bye', msgstr: 'Bye' },
+        { msgid: 'fuzzy.one', msgstr: 'Fuzzy', flags: 'fuzzy' },
+      ],
+    });
+    writePo(path.join(dir, 'pl-PL.po'), {
+      language: 'pl',
+      entries: [
+        { msgid: 'hello', msgstr: 'Cześć' },
+        // bye missing → error
+        { msgid: 'fuzzy.one', msgstr: 'Niejasne', flags: 'fuzzy' },
+      ],
+    });
+
+    let output;
+    try {
+      output = execFileSync(process.execPath, [BIN, 'validate', '--dir', dir, '--json', '--severity', 'warning'], {
+        encoding: 'utf-8',
+      });
+    } catch (err) {
+      output = err.stdout;
+    }
+
+    const json = JSON.parse(output);
+    assert.ok(json.errors.length > 0, 'errors should be present');
+    assert.ok(json.warnings.length > 0, 'warnings should be present with --severity warning');
+  });
+
+  it('--severity error exits 0 when only warnings exist', () => {
+    const dir = path.join(TMP, 'sev-exit0');
+    fs.mkdirSync(dir, { recursive: true });
+    writePo(path.join(dir, 'en-US.po'), {
+      language: 'en',
+      entries: [
+        { msgid: 'hello', msgstr: 'Hello' },
+        { msgid: 'fuzzy.one', msgstr: 'Fuzzy', flags: 'fuzzy' },
+      ],
+    });
+    writePo(path.join(dir, 'pl-PL.po'), {
+      language: 'pl',
+      entries: [
+        { msgid: 'hello', msgstr: 'Cześć' },
+        { msgid: 'fuzzy.one', msgstr: 'Niejasne', flags: 'fuzzy' },
+      ],
+    });
+
+    // Only fuzzy warnings, no errors → exit 0 with --severity error
+    const result = execFileSync(process.execPath, [BIN, 'validate', '--dir', dir, '--severity', 'error'], {
+      encoding: 'utf-8',
+    });
+    assert.ok(typeof result === 'string', 'should execute without throwing');
+  });
+});

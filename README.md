@@ -45,7 +45,7 @@ A zero-dependency CLI tool to convert between [GNU gettext `.po`](https://www.gn
 - **Validation** — check for missing keys, empty translations, variable mismatches, fuzzy entries, plural form consistency
 - **Statistics** — per-language coverage reports with progress bars
 - **Diff** — compare two CSV files or a CSV against current `.po` files
-- **Fuzzy detection** — `#, fuzzy` entries highlighted in preview (yellow badge), counted in stats, warned in validate
+- **Fuzzy detection & management** — `#, fuzzy` entries exported to `_status` column in CSV, highlighted in preview (yellow badge), counted in stats, warned in validate; on import, clear `_status` to unfuzzy, or keep `fuzzy` to preserve the flag
 - **Dark mode** — toggle between light and dark themes in the browser preview
 - **Interactive** — if multiple `.po` directories exist, prompts you to choose
 
@@ -111,29 +111,33 @@ npx translation-toolkit import translations.csv
 translation-toolkit export [options]
 ```
 
-| Option                 | Description            | Default            |
-| ---------------------- | ---------------------- | ------------------ |
-| `-o, --output <file>`  | Output CSV file path   | `translations.csv` |
-| `-d, --dir <path>`     | Translations directory | auto-discover      |
-| `-D, --delimiter <ch>` | Column delimiter       | `\|`               |
+| Option                 | Description                            | Default            |
+| ---------------------- | -------------------------------------- | ------------------ |
+| `-o, --output <file>`  | Output CSV file path                   | `translations.csv` |
+| `-d, --dir <path>`     | Translations directory                 | auto-discover      |
+| `-D, --delimiter <ch>` | Column delimiter                       | `\|`               |
+| `--no-status`          | Omit the `_status` column from the CSV | include status     |
 
 **Example output** (`translations.csv`):
 
 ```text
-key|en|pl
-mainMenu.send|Send packages|Wyślij przesyłki
-mainMenu.help|Help|Pomoc
+key|_status|en|pl
+mainMenu.send||Send packages|Wyślij przesyłki
+mainMenu.help||Help|Pomoc
+old.draft|fuzzy|Draft text|Wersja robocza
 ```
+
+The `_status` column contains `fuzzy` for entries marked `#, fuzzy` in any language, and is empty otherwise. Use `--no-status` to omit it.
 
 #### Plural forms in CSV
 
 Plural entries are exported as separate `key[N]` rows — one per plural form:
 
 ```text
-key|en|pl
-1 file[0]|%d file|%d plik
-1 file[1]|%d files|%d pliki
-1 file[2]||%d plików
+key|_status|en|pl
+1 file[0]||%d file|%d plik
+1 file[1]||%d files|%d pliki
+1 file[2]|||%d plików
 ```
 
 English has 2 forms (`[0]` singular, `[1]` plural). Polish has 3 forms. Empty cells are filled when a language has fewer forms. On import, `key[N]` rows are automatically grouped back into `msgid_plural` / `msgstr[N]` blocks.
@@ -157,6 +161,15 @@ translation-toolkit import <file.csv> [options]
 | --------------------- | ------------------------------------------------------------------------------ |
 | **Replace** (default) | CSV is the source of truth. Keys not in CSV are removed from `.po`.            |
 | **Merge** (`--merge`) | Existing `.po` keys are preserved. Only keys present in CSV are added/updated. |
+
+### Fuzzy status on import
+
+When the imported CSV contains a `_status` column (produced by `export`):
+
+- **Empty `_status`** → the `#, fuzzy` flag is **removed** from the `.po` entry (unfuzzy)
+- **`_status=fuzzy`** → the `#, fuzzy` flag is **preserved** (or added)
+- Other comment flags like `c-format` are preserved on the `#,` line
+- CSVs without `_status` leave fuzzy flags unchanged (backwards compatible)
 
 ### Adding a new language
 
@@ -215,9 +228,11 @@ Check all `.po` files for common issues. Useful in CI pipelines (exits with code
 translation-toolkit validate [options]
 ```
 
-| Option             | Description            | Default       |
-| ------------------ | ---------------------- | ------------- |
-| `-d, --dir <path>` | Translations directory | auto-discover |
+| Option                  | Description                                      | Default       |
+| ----------------------- | ------------------------------------------------ | ------------- |
+| `-d, --dir <path>`      | Translations directory                           | auto-discover |
+| `--json`                | Output results as JSON (for CI/tooling)          |               |
+| `--severity <level>`    | Filter: `error` or `warning` (default: all)      | `warning`     |
 
 Checks performed:
 
@@ -226,6 +241,28 @@ Checks performed:
 - **Empty translations** — `msgstr` is empty (warning)
 - **Variable mismatch** — `{{variables}}` differ between reference and target (error/warning)
 - **Fuzzy entries** — `#, fuzzy` flag detected — translation needs review (warning)
+
+The reference language is auto-detected as the one with the most keys (typically `en`).
+
+**JSON output** (`--json`):
+
+```json
+{
+  "errors": [{ "type": "missing-key", "lang": "pl", "key": "bye", "message": "..." }],
+  "warnings": [{ "type": "fuzzy-entry", "lang": "pl", "key": "hello", "message": "..." }],
+  "summary": {
+    "refLang": "en", "languages": ["en", "pl"],
+    "totalKeys": 50, "totalPluralKeys": 4, "totalFuzzyKeys": 3,
+    "errorCount": 1, "warningCount": 1
+  }
+}
+```
+
+**Severity filtering** — use `--severity error` to show only errors (useful in CI when fuzzy warnings are expected):
+
+```bash
+translation-toolkit validate --severity error --json
+```
 
 The reference language is auto-detected as the one with the most keys (typically `en`).
 
@@ -313,6 +350,7 @@ When `--dir` is not specified, the tool recursively searches the current working
 
 - Default delimiter: `|` (pipe) — avoids conflicts with commas in translations
 - First column is always `key` (the `msgid`)
+- Second column is `_status` — contains `fuzzy` for entries with `#, fuzzy` flag in any language, empty otherwise (omit with `--no-status`)
 - Language columns use short codes (`en`, `pl`, `cs`, ...)
 - Fields containing the delimiter, `"`, or newlines are wrapped in double quotes
 - Double quotes inside fields are escaped as `""`
@@ -351,6 +389,12 @@ jobs:
       - run: npm install -g translation-toolkit
       - run: translation-toolkit validate --dir src/i18n --ci
       - run: translation-toolkit stats --dir src/i18n --ci
+```
+
+**Tip:** Use `--json` for machine-readable validation output, and `--severity error` to ignore fuzzy warnings:
+
+```bash
+translation-toolkit validate --dir src/i18n --json --severity error
 ```
 
 ### Deploy static preview to GitHub Pages

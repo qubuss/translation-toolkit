@@ -6,7 +6,7 @@ Wklej poniższy prompt w czacie nowego projektu (który ma pliki .po):
 
 ## PROMPT START
 
-Zainstaluj i przetestuj narzędzie `translation-toolkit@1.5.2` (npm) na tym projekcie.
+Zainstaluj i przetestuj narzędzie `translation-toolkit@1.6.0` (npm) na tym projekcie.
 Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj raport.
 
 > Komendy: `export`, `import`, `preview`, `validate`, `stats`, `diff`
@@ -14,8 +14,8 @@ Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj 
 ### 0. Instalacja
 
 ```bash
-npm install -g translation-toolkit@1.5.2
-translation-toolkit --version   # powinno wypisać 1.5.2
+npm install -g translation-toolkit@1.6.0
+translation-toolkit --version   # powinno wypisać 1.6.0
 ```
 
 ### 1. Odkrywanie plików .po
@@ -643,6 +643,79 @@ translation-toolkit stats --dir /tmp/tt-fuzzy-test
 - [ ] Validate raportuje 1 fuzzy-entry warning
 - [ ] Stats pokazuje `Fuzzy: 1 entries need review`
 
+### 15. Test _STATUS COLUMN & UNFUZZY (v1.6.0)
+
+**Export z kolumną `_status`:**
+
+```bash
+translation-toolkit export --dir "$PO_DIR" -o /tmp/tt-status.csv
+```
+
+- [ ] CSV ma kolumnę `_status` między `key` a językami: `key|_status|en|pl|...`
+- [ ] Wpisy z `#, fuzzy` mają `_status=fuzzy`, reszta pusty string
+- [ ] `--no-status` pomija kolumnę `_status`:
+
+```bash
+translation-toolkit export --dir "$PO_DIR" -o /tmp/tt-nostatus.csv --no-status
+head -1 /tmp/tt-nostatus.csv   # powinno być: key|en|pl|...
+```
+
+**Import z unfuzzy:**
+
+```bash
+# Wyeksportuj z _status, usuń "fuzzy" z kolumny _status (unfuzzy)
+cp /tmp/tt-status.csv /tmp/tt-unfuzzy.csv
+# Edytuj /tmp/tt-unfuzzy.csv: zmień "fuzzy" na "" w kolumnie _status
+sed -i '' 's/|fuzzy|/||/g' /tmp/tt-unfuzzy.csv
+translation-toolkit import /tmp/tt-unfuzzy.csv --dir "$PO_DIR" --dry-run
+```
+
+- [ ] Dry-run raportuje zmiany fuzzy status
+- [ ] Po prawdziwym imporcie: wpisy które miały `#, fuzzy` tracą tę flagę
+- [ ] Inne flagi na linii `#,` (np. `c-format`) są zachowane
+- [ ] CSV bez kolumny `_status` nie zmienia flag fuzzy (backwards compatible)
+
+### 16. Test VALIDATE --json & --severity (v1.6.0)
+
+**JSON output:**
+
+```bash
+translation-toolkit validate --dir "$PO_DIR" --json
+```
+
+- [ ] Output jest poprawnym JSON (parsuje się przez `jq .`)
+- [ ] Struktura: `{ "errors": [...], "warnings": [...], "summary": { ... } }`
+- [ ] Każdy error/warning ma: `type`, `lang`, `key`, `message`
+- [ ] `summary` zawiera: `refLang`, `languages`, `totalKeys`, `totalPluralKeys`, `totalFuzzyKeys`, `errorCount`, `warningCount`
+- [ ] Klucze z `msgctxt` używają `::` (nie `\x04`)
+- [ ] Brak kodów ANSI w outputcie JSON
+
+**Severity filter:**
+
+```bash
+# Pokaż tylko errory (ukryj fuzzy warnings)
+translation-toolkit validate --dir "$PO_DIR" --severity error
+```
+
+- [ ] Warnings (np. fuzzy-entry) są ukryte
+- [ ] Tylko errory (missing-key, variable-mismatch) są widoczne
+- [ ] Exit code 0 jeśli brak errorów (nawet jeśli są warnings)
+
+```bash
+# Połączenie z --json
+translation-toolkit validate --dir "$PO_DIR" --json --severity error
+```
+
+- [ ] JSON `warnings` array jest pusty
+- [ ] JSON `errors` array zawiera errory
+
+```bash
+# Default (--severity warning) pokazuje wszystko
+translation-toolkit validate --dir "$PO_DIR" --json --severity warning
+```
+
+- [ ] JSON zawiera zarówno errory jak i warnings
+
 ### 11. Anomalie i niestandardowe zachowania
 
 **WAŻNE**: Przez cały czas testowania notuj WSZYSTKIE niespodziewane zachowania, nawet jeśli nie są błędami. Anomalie to rzeczy, które Cię zaskoczyły, wymagały dodatkowej interwencji lub mogą być problemem dla innych użytkowników.
@@ -672,7 +745,7 @@ Dla każdej anomalii zanotuj:
 Wygeneruj raport **dokładnie** w poniższym formacie:
 
 ```
-## Translation Toolkit v1.5.2 — Test Report
+## Translation Toolkit v1.6.0 — Test Report
 
 **Projekt**: [nazwa projektu]
 **Pliki .po**: X plików, Y języków
@@ -722,6 +795,11 @@ Wygeneruj raport **dokładnie** w poniższym formacie:
 | **R14** | **Fuzzy validate warnings** | ✅/❌ | v1.5.2 new: `fuzzy-entry` type, severity warning |
 | **R15** | **Fuzzy stats counter** | ✅/❌ | v1.5.2 new: `Fuzzy: X entries need review` |
 | **R16** | **Fuzzy preview badge** | ✅/❌ | v1.5.2 new: yellow row + fuzzy badge |
+| **R17** | **_status column in export** | ✅/❌ | v1.6.0 new: `_status` column between key and langs |
+| **R18** | **--no-status flag** | ✅/❌ | v1.6.0 new: omits `_status` column |
+| **R19** | **Unfuzzy on import** | ✅/❌ | v1.6.0 new: empty `_status` removes `#, fuzzy` |
+| **R20** | **validate --json** | ✅/❌ | v1.6.0 new: JSON output with errors/warnings/summary |
+| **R21** | **validate --severity error** | ✅/❌ | v1.6.0 new: hides warnings, exit 0 if no errors |
 
 ### Anomalie
 
