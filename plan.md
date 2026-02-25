@@ -1,13 +1,13 @@
 # translation-toolkit — Plan rozwoju
 
-## Status: AKTYWNY — v1.8.0 wydane, Faza 3.2 done, 3.3 następna
+## Status: UKOŃCZONY — v2.0.0 wydane
 
-**Strategia:** Iteracyjne wydania — solidne fundamenty (Faza 1 ✅), polish & DX (v1.2–v1.4 ✅), plural forms (Faza 2 ✅), polish (v1.5.1–v1.5.2 ✅), fuzzy CSV + validate improvements (v1.6.0 ✅), JSON format (v1.7.0 ✅), i18next format (v1.8.0 ✅), cross-format validation (v1.9.0 ✅), teraz finalizacja v2.0 (Faza 3.4). Każda faza kończy się publikacją na npm.
+**Strategia:** Iteracyjne wydania — solidne fundamenty (Faza 1 ✅), polish & DX (v1.2–v1.4 ✅), plural forms (Faza 2 ✅), polish (v1.5.1–v1.5.2 ✅), fuzzy CSV + validate improvements (v1.6.0 ✅), JSON format (v1.7.0 ✅), i18next format (v1.8.0 ✅), cross-format validation (v1.9.0 ✅), finalizacja v2.0 (Faza 3.4 ✅). Każda faza kończy się publikacją na npm.
 
 **Nazwa paczki:** `translation-toolkit` ✅ (opublikowana na npm)
 **Repozytorium:** https://github.com/qubuss/translation-toolkit
 **Zero dependencies** — kluczowy wyróżnik
-**Aktualna wersja:** v1.8.0 (26.02.2026)
+**Aktualna wersja:** v2.0.0 (25.02.2026)
 **Testy:** 336 testów / 81 suite'ów
 
 ---
@@ -187,9 +187,13 @@ Cel: rozszerzenie o eksport/import do JSON i i18next. Zmienia charakter paczki z
 
 #### 3.4 Finalizacja v2.0+
 
-- [ ] Major version bump (2.0.0)
-- [ ] Aktualizacja README, CLI help
-- [ ] Blog post / changelog
+- [x] Major version bump (2.0.0)
+- [x] Aktualizacja README, CLI help
+- [x] Blog post / changelog
+- [x] Usunięcie `po-csv-tool.js` (legacy alias)
+- [x] Nowy `index.js` entry point (programmatic API)
+- [x] `engines.node` ≥ 18
+- [x] Naprawienie dat w CHANGELOG
 
 ---
 
@@ -204,11 +208,11 @@ Cel: rozszerzenie o eksport/import do JSON i i18next. Zmienia charakter paczki z
 | **v1.6.0**       | fuzzy CSV, validate --json/--severity  | ~1.5 dni  | ✅ v1.6.0 (24.02.2026), 257/62  |
 | **v1.7.0**       | JSON format (flat export/import)       | ~0.5 dnia | ✅ v1.7.0 (24.02.2026), 290/70  |
 | **v1.8.0**       | i18next format (CLDR v4 + v3 legacy)   | ~0.5 dnia | ✅ v1.8.0 (26.02.2026), 336/81  |
-| **v1.9.0**       | cross-format validation                | ~0.5 dnia | ✅ v1.9.0 (25.07.2025), 373/100 |
-| **Faza 3.4**     | finalizacja v2.0                       | ~1 dzień  | ⏳ po 3.3                       |
+| **v1.9.0**       | cross-format validation                | ~0.5 dnia | ✅ v1.9.0 (25.02.2026), 373/100 |
+| **Faza 3.4**     | finalizacja v2.0                       | ~0.5 dnia | ✅ v2.0.0 (25.02.2026), 373/100 |
 
-**Dotychczasowy czas**: ~15.5 dni (Faza 1 + 1.x + 2 + v1.5.1–1.5.2 + v1.6.0 + v1.7.0 + v1.8.0 + v1.9.0)
-**Pozostało**: ~1 dzień (Faza 3.4)
+**Dotychczasowy czas**: ~16 dni (Faza 1 + 1.x + 2 + v1.5.1–1.5.2 + v1.6.0 + v1.7.0 + v1.8.0 + v1.9.0 + Faza 3.4)
+**Pozostało**: — (projekt ukończony)
 
 ---
 

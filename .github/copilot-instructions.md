@@ -11,20 +11,22 @@
 
 Six commands: `export`, `import`, `preview`, `validate`, `stats`, `diff`.
 
-- **Runtime:** Node.js ≥ 14
+- **Runtime:** Node.js ≥ 18
 - **Module system:** CommonJS (`require` / `module.exports`)
 - **Dependencies:** ZERO — pure Node.js stdlib only. **Never add an npm dependency.**
 - **Test runner:** `node:test` (built-in, Node 18+)
 - **No build step** — source files are published directly to npm.
+- **Programmatic API:** `index.js` re-exports all public functions from every `lib/` module.
 
 ---
 
 ## Architecture
 
 ```
+index.js                          ← Programmatic API entry point (re-exports all public functions)
+
 bin/
   translation-toolkit.js   ← Main CLI entry point (package.json "bin")
-  po-csv-tool.js            ← Legacy alias (old name, kept for backwards compat)
 
 lib/
   poParser.js  → parsePo, writePo, patchPoFile, discoverPoFiles, escapePo, ...
@@ -75,9 +77,9 @@ Every `lib/*.js` file exports **two things**:
 
 Tests import and test the **core functions** directly. CLI behavior is tested via `child_process.execFileSync` against the actual binary.
 
-### CLI Entry Points
+### CLI Entry Point
 
-Both `bin/translation-toolkit.js` and `bin/po-csv-tool.js` share the same structure: parse `process.argv`, dispatch to the appropriate `run*()` function. When adding a new command or flag, **update both files** to keep the legacy alias working.
+`bin/translation-toolkit.js` parses `process.argv` and dispatches to the appropriate `run*()` function. When adding a new command or flag, update this file and its `printHelp()` function.
 
 ---
 
@@ -151,11 +153,7 @@ On import, `key[N]` rows are detected via `PLURAL_KEY_RE = /^(.+)\[(\d+)\]$/` an
 - `patchPoFile()` patches individual `msgstr[N]` lines — it does NOT create new plural entries from scratch (D4 design decision)
 - `msgctxt` plural keys use `\x04` internally, `::` in CSV — same as singular entries
 
-### 5. Two CLI Entry Points
-
-`bin/translation-toolkit.js` (main) and `bin/po-csv-tool.js` (legacy). Both must be updated when adding commands or flags. The legacy one may be slightly out of date — always verify parity.
-
-### 6. Planning Docs Are in Polish
+### 5. Planning Docs Are in Polish
 
 `plan.md` (development roadmap, ~396 lines) and `test-prompt.md` (manual QA script, ~520 lines) are written in Polish. They contain critical context about design decisions and known issues.
 
@@ -186,7 +184,7 @@ npm test          # runs: node --test test/*.test.js
 | Diff computation, CLI exit codes, plural diff             | `diff.test.js`          | Function calls + `execFileSync` |
 | Cross-format validation (.po vs JSON/i18next sync)        | `crossFormat.test.js`   | Direct + `execFileSync`         |
 
-**Note:** `preview.test.js` references the legacy CLI path (`bin/po-csv-tool.js`), while `diff.test.js` uses the new path (`bin/translation-toolkit.js`). This inconsistency exists but both work.
+**Note:** All CLI test files use `bin/translation-toolkit.js` as the CLI path.
 
 ---
 
@@ -350,8 +348,8 @@ Checklist (all steps required):
 
 1. [ ] Create `lib/<command>.js` with a core function + `run<Command>()` CLI runner
 2. [ ] Add case to `bin/translation-toolkit.js` — import + dispatch in `main()`
-3. [ ] Add case to `bin/po-csv-tool.js` — same changes (legacy alias)
-4. [ ] Add help text in `printHelp()` in **both** bin files
+3. [ ] Add help text in `printHelp()` in `bin/translation-toolkit.js`
+4. [ ] Add function exports to `index.js`
 5. [ ] Create `test/<command>.test.js` with unit tests for the core function
 6. [ ] Add CLI behavior tests using `execFileSync` if warranted
 7. [ ] Add/update fixtures in `test/fixtures/` if the command needs test data
@@ -365,7 +363,7 @@ Checklist (all steps required):
 ## When Adding a New Flag to an Existing Command
 
 1. [ ] Add arg parsing in `run<Command>()` in `lib/<command>.js` (manual for-loop pattern)
-2. [ ] Add to `printHelp()` in **both** `bin/translation-toolkit.js` and `bin/po-csv-tool.js`
+2. [ ] Add to `printHelp()` in `bin/translation-toolkit.js`
 3. [ ] Add tests covering the new flag
 4. [ ] Update `CHANGELOG.md` and `test-prompt.md`
 5. [ ] Update `README.md` options table

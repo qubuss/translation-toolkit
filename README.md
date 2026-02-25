@@ -4,9 +4,9 @@
 [![license](https://img.shields.io/npm/l/translation-toolkit)](LICENSE)
 [![node](https://img.shields.io/node/v/translation-toolkit)](package.json)
 
-A zero-dependency CLI tool to convert between [GNU gettext `.po`](https://www.gnu.org/software/gettext/manual/html_node/PO-Files.html) translation files and pipe-delimited CSV.
+A zero-dependency CLI tool to manage [GNU gettext `.po`](https://www.gnu.org/software/gettext/manual/html_node/PO-Files.html) translation files — export to CSV, JSON, or i18next format, import back, preview in browser, validate, compute stats, and diff.
 
-**Export** all your `.po` files into a single CSV that's easy to edit in any spreadsheet app (Excel, Google Sheets, LibreOffice). **Import** the CSV back to update or create `.po` files — including new languages.
+**Export** all your `.po` files into a single CSV that's easy to edit in any spreadsheet app (Excel, Google Sheets, LibreOffice), or export to per-language JSON / i18next files for direct use in web apps. **Import** back to update or create `.po` files — including new languages.
 
 ## Table of Contents
 
@@ -26,6 +26,7 @@ A zero-dependency CLI tool to convert between [GNU gettext `.po`](https://www.gn
 - [CI/CD Integration](#cicd-integration)
 - [Examples](#examples)
 - [Typical Workflow](#typical-workflow)
+- [Programmatic API](#programmatic-api)
 - [Limitations](#limitations)
 - [Contributing](#contributing)
 - [License](#license)
@@ -42,6 +43,9 @@ A zero-dependency CLI tool to convert between [GNU gettext `.po`](https://www.gn
 - **Static export** — generate a standalone HTML preview file for GitHub Pages / S3 / email
 - **Inline editing** — click any cell in the preview to edit translations directly in the browser
 - **Plural forms** — full `msgid_plural` / `msgstr[N]` support: export as `key[N]` rows, import back, validate nplurals, preview with badge
+- **JSON export** — export to per-language flat JSON files; import back (auto-flattens nested JSON)
+- **i18next format** — export with CLDR plural suffixes (`_one`, `_other`, `_few`, `_many`) for v4, or legacy `_plural`/`_N` for v3
+- **Cross-format validation** — verify that exported JSON / i18next files are in sync with `.po` source files
 - **Validation** — check for missing keys, empty translations, variable mismatches, fuzzy entries, plural form consistency
 - **Statistics** — per-language coverage reports with progress bars
 - **Diff** — compare two CSV files or a CSV against current `.po` files
@@ -462,6 +466,8 @@ When `--dir` is not specified, the tool recursively searches the current working
 - Language columns use short codes (`en`, `pl`, `cs`, ...)
 - Fields containing the delimiter, `"`, or newlines are wrapped in double quotes
 - Double quotes inside fields are escaped as `""`
+- **Plural entries** use `key[N]` suffixes — one row per plural form: `1 file[0]`, `1 file[1]`, etc.
+- **`msgctxt` keys** use `::` separator in CSV — e.g., `menu::Save` (context `menu`, msgid `Save`)
 
 ## CI/CD Integration
 
@@ -609,18 +615,46 @@ git diff src/translations/
 ## Limitations
 
 - Plural forms in the browser preview are **read-only** (not editable via inline editing; edit via CSV round-trip instead)
+- `patchPoFile()` patches existing plural entries in-place but does **not** create new plural entries from scratch
+- Extra empty plural forms may appear after round-trip when languages have different `nplurals` (e.g., English 2 forms vs Polish 3 forms)
 
 ## Roadmap
 
-| Phase | Feature                                                   | Status                 |
-| ----- | --------------------------------------------------------- | ---------------------- |
-| 1     | Core CLI (export, import, preview, validate, stats, diff) | ✅ Done                |
-| 1.3   | DX improvements (dry-run, watch mode, port auto-detect)   | ✅ Done                |
-| 1.4   | CI/CD mode (`--ci` flag, non-interactive, exit codes)     | ✅ Done                |
-| 1.5   | Static preview export (`--static`) for GitHub Pages       | ✅ Done                |
-| 2     | Plural forms (`msgid_plural` / `msgstr[N]`)               | ✅ Done                |
-| 3     | Additional formats: JSON, XLIFF, Android XML              | 🔄 JSON + i18next done |
-| 4     | Custom validation rules                                   | Planned                |
+| Phase | Feature                                                    | Status  |
+| ----- | ---------------------------------------------------------- | ------- |
+| 1     | Core CLI (export, import, preview, validate, stats, diff)  | ✅ Done |
+| 1.3   | DX improvements (dry-run, watch mode, port auto-detect)    | ✅ Done |
+| 1.4   | CI/CD mode (`--ci` flag, non-interactive, exit codes)      | ✅ Done |
+| 1.5   | Static preview export (`--static`) for GitHub Pages        | ✅ Done |
+| 2     | Plural forms (`msgid_plural` / `msgstr[N]`)                | ✅ Done |
+| 3     | Additional formats: JSON, i18next, cross-format validation | ✅ Done |
+| 4     | Custom validation rules                                    | Planned |
+
+## Programmatic API
+
+Since v2.0, all core functions are exported from the package entry point:
+
+```js
+const {
+  parsePo,
+  writePo,
+  patchPoFile,
+  exportToCsv,
+  importFromCsv,
+  exportToJson,
+  importFromJson,
+  exportToI18next,
+  importFromI18next,
+  validateTranslations,
+  crossFormatValidation,
+  computeStats,
+  computeDiff,
+  buildHtml,
+  generateStaticPreview,
+} = require("translation-toolkit");
+```
+
+See each module in `lib/` for function signatures and JSDoc documentation.
 
 ## Contributing
 
@@ -628,9 +662,15 @@ Contributions are welcome! Please:
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+3. Follow the code conventions: 2-space indent, single quotes, semicolons, JSDoc on all public functions
+4. Add tests using `node:test` (`describe`/`it`/`assert/strict`)
+5. Run `npm test` — all tests must pass
+6. Update `CHANGELOG.md` with your changes
+7. Commit your changes (`git commit -m 'Add amazing feature'`)
+8. Push to the branch (`git push origin feature/amazing-feature`)
+9. Open a Pull Request
+
+**Zero-dependency policy:** This project uses only Node.js built-in modules. Never add npm dependencies.
 
 For bugs or feature requests, please [open an issue](https://github.com/qubuss/translation-toolkit/issues).
 

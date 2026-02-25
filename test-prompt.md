@@ -6,7 +6,7 @@ Wklej poniższy prompt w czacie nowego projektu (który ma pliki .po):
 
 ## PROMPT START
 
-Zainstaluj i przetestuj narzędzie `translation-toolkit@1.9.0` (npm) na tym projekcie.
+Zainstaluj i przetestuj narzędzie `translation-toolkit@2.0.0` (npm) na tym projekcie.
 Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj raport.
 
 > Komendy: `export`, `import`, `preview`, `validate`, `stats`, `diff`
@@ -14,7 +14,7 @@ Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj 
 ### 0. Instalacja
 
 ```bash
-npm install -g translation-toolkit@1.9.0
+npm install -g translation-toolkit@2.0.0
 translation-toolkit --version   # powinno wypisać 1.9.0
 ```
 

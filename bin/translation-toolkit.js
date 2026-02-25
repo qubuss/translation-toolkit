@@ -53,7 +53,7 @@ PREVIEW OPTIONS
   -p, --port <number>   HTTP server port (default: 3456, auto-increments if busy)
   -w, --watch           Auto-reload when .po files change
   -s, --static          Generate standalone HTML file (no server needed)
-  -o, --output <path>   Output file for --static (default: translation-preview.html)
+  -o, --output <path>   Output file for --static (default: translation-preview/index.html)
 
 VALIDATE OPTIONS
   -d, --dir <path>      Translations directory (default: auto-discover)

@@ -3,7 +3,30 @@
 All notable changes to **translation-toolkit** are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [1.9.0] — 2025-07-25
+## [2.0.0] — 2026-02-25
+
+### Breaking Changes
+
+- **Removed `po-csv-tool` legacy CLI alias** — the `bin/po-csv-tool.js` file has been deleted. Use `translation-toolkit` (the primary command) instead. The legacy alias was never registered in `package.json` `"bin"` and was not functional since v1.1.0.
+- **Minimum Node.js version raised to 18** — `engines.node` changed from `>=14` to `>=18`. Node 18+ is required for tests (`node:test`), and all LTS versions below 18 are EOL.
+- **`"main"` entry point changed** — `require('translation-toolkit')` now returns a proper API object (via `index.js`) exporting all public core functions from every module, instead of just `poParser.js`.
+
+### Added
+
+- **Programmatic API (`index.js`)** — new entry point re-exports all public functions: `parsePo`, `writePo`, `patchPoFile`, `exportToCsv`, `importFromCsv`, `exportToJson`, `importFromJson`, `exportToI18next`, `importFromI18next`, `validateTranslations`, `crossFormatValidation`, `computeStats`, `computeDiff`, `buildHtml`, `generateStaticPreview`, and more. Enables `const { parsePo } = require('translation-toolkit')` without reaching into `lib/`.
+
+### Fixed
+
+- **CHANGELOG date corrections** — versions 1.5.0–1.9.0 had incorrect dates (2025 instead of 2026); all dates now match actual git commit timestamps
+- **Duplicate `[1.7.0]` comparison link** — removed duplicate entry from CHANGELOG footer
+- **`--static` default path in help text** — corrected from `translation-preview.html` to `translation-preview/index.html` (matches actual code behavior)
+
+### Changed
+
+- **README polished for v2.0** — updated project description to mention JSON/i18next formats; added JSON export/i18next/cross-format validation to features list; expanded CSV Format section with `key[N]` plural convention and `msgctxt` `::` separator; expanded Limitations section; updated Roadmap (Phase 3 fully done); added Programmatic API section; improved Contributing section with code conventions and zero-dependency policy
+- **`package.json` cleanup** — `"files"` now includes `index.js`; description unchanged but `"main"` points to `./index.js`
+
+## [1.9.0] — 2026-02-25
 
 ### Added
 
@@ -19,7 +42,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 373 tests across 100 suites (was 346 / 85)
 - New `test/crossFormat.test.js` — 27 tests / 15 suites covering JSON sync, i18next sync, missing/extra keys, value mismatches, missing/extra languages, plural sync, msgctxt keys, fixture reference checks (4 fixtures), CLI exit codes, JSON output, severity filter, error handling
 
-## [1.8.0] — 2025-02-26
+## [1.8.0] — 2026-02-24
 
 ### Added
 
@@ -35,7 +58,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Added static JSON and i18next fixture files for regression protection
 - Added "export matches fixture" tests for both JSON and i18next formats
 
-## [1.7.0] — 2025-02-26
+## [1.7.0] — 2026-02-24
 
 ### Added
 
@@ -48,7 +71,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - 290 tests across 70 suites (was 257 / 62)
 
-## [1.6.0] — 2025-02-26
+## [1.6.0] — 2026-02-24
 
 ### Added
 
@@ -65,7 +88,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - 257 tests across 62 suites (was 232 / 58)
 
-## [1.5.2] — 2025-07-24
+## [1.5.2] — 2026-02-23
 
 ### Added
 
@@ -82,7 +105,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - 204 tests across 50 suites (was 187 / 46)
 
-## [1.5.1] — 2025-07-24
+## [1.5.1] — 2026-02-23
 
 ### Added
 
@@ -98,7 +121,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - 187 tests across 46 suites (was 176 / 43)
 
-## [1.5.0] — 2025-07-24
+## [1.5.0] — 2026-02-23
 
 ### Added
 
@@ -229,7 +252,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Zero runtime dependencies
 - 31 tests across 12 suites
 
-[1.7.0]: https://github.com/qubuss/translation-toolkit/compare/v1.6.0...v1.7.0
+[2.0.0]: https://github.com/qubuss/translation-toolkit/compare/v1.9.0...v2.0.0
 [1.9.0]: https://github.com/qubuss/translation-toolkit/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/qubuss/translation-toolkit/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/qubuss/translation-toolkit/compare/v1.6.0...v1.7.0

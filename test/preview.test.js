@@ -16,7 +16,7 @@ const { computeStats } = require('../lib/stats');
 
 const FIXTURES = path.join(__dirname, 'fixtures');
 const TMP = path.join(__dirname, '.tmp-preview');
-const CLI = path.join(__dirname, '..', 'bin', 'po-csv-tool.js');
+const CLI = path.join(__dirname, '..', 'bin', 'translation-toolkit.js');
 
 before(() => {
   fs.mkdirSync(TMP, { recursive: true });

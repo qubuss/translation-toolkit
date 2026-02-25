@@ -1,6 +1,6 @@
 {
   "name": "translation-toolkit",
-  "version": "1.9.0",
+  "version": "2.0.0",
   "description": "Zero-dependency CLI toolkit for managing .po translation files — export to CSV, import, browser preview with inline editing, validate, stats, and diff.",
   "keywords": [
     "po",
@@ -34,15 +34,16 @@
   "bin": {
     "translation-toolkit": "./bin/translation-toolkit.js"
   },
-  "main": "./lib/poParser.js",
+  "main": "./index.js",
   "files": [
+    "index.js",
     "bin/",
     "lib/",
     "LICENSE",
     "README.md"
   ],
   "engines": {
-    "node": ">=14"
+    "node": ">=18"
   },
   "scripts": {
     "test": "node --test test/*.test.js"
