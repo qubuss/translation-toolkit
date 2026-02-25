@@ -1,0 +1,64 @@
+name: 'Translation Toolkit'
+description: 'Validate .po translations, show stats, and post results as a PR comment'
+author: 'qubuss'
+
+branding:
+  icon: 'globe'
+  color: 'blue'
+
+inputs:
+  dir:
+    description: 'Directory containing .po files'
+    required: true
+    default: 'translations'
+  post-comment:
+    description: 'Post results as PR comment (true/false)'
+    required: false
+    default: 'true'
+  fail-on-error:
+    description: 'Fail the action if validation errors are found (true/false)'
+    required: false
+    default: 'true'
+  cross-format:
+    description: 'Cross-format validation target: json or i18next'
+    required: false
+    default: ''
+  format-dir:
+    description: 'Directory with JSON/i18next files for cross-format check'
+    required: false
+    default: ''
+  compat:
+    description: 'i18next compatibility version (3 or 4)'
+    required: false
+    default: '4'
+
+outputs:
+  error-count:
+    description: 'Number of validation errors found'
+    value: ${{ steps.checks.outputs.error-count }}
+  warning-count:
+    description: 'Number of validation warnings found'
+    value: ${{ steps.checks.outputs.warning-count }}
+  overall-coverage:
+    description: 'Overall translation coverage percentage'
+    value: ${{ steps.checks.outputs.overall-coverage }}
+
+runs:
+  using: 'composite'
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    - name: Run translation checks
+      id: checks
+      run: node "${{ github.action_path }}/action/run.js"
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        INPUT_DIR: ${{ inputs.dir }}
+        INPUT_POST_COMMENT: ${{ inputs.post-comment }}
+        INPUT_FAIL_ON_ERROR: ${{ inputs.fail-on-error }}
+        INPUT_CROSS_FORMAT: ${{ inputs.cross-format }}
+        INPUT_FORMAT_DIR: ${{ inputs.format-dir }}
+        INPUT_COMPAT: ${{ inputs.compat }}
+        GITHUB_TOKEN: ${{ github.token }}

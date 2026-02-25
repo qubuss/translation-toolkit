@@ -3,6 +3,17 @@
 All notable changes to **translation-toolkit** are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [2.1.0] — 2026-02-25
+
+### Added
+
+- **GitHub Action (`action.yml`)** — built-in composite GitHub Action that validates translations, computes per-language statistics, and posts a rich Markdown report as a PR comment. Supports cross-format sync checks, configurable inputs (`dir`, `post-comment`, `fail-on-error`, `cross-format`, `format-dir`, `compat`), and outputs (`error-count`, `warning-count`, `overall-coverage`). Uses `<!-- translation-toolkit-report -->` marker to update existing comments instead of creating duplicates. Usage: `uses: qubuss/translation-toolkit@v2`
+- **`action/run.js`** — zero-dependency action runner script; imports the programmatic API directly from the repo (no `npm install` needed), runs `validateTranslations()` + `computeStats()` + optionally `crossFormatValidation()`, formats results as Markdown tables with progress bars, and posts/updates PR comments via the GitHub REST API using Node 18+ built-in `fetch()`
+
+### Changed
+
+- **README expanded** — added "GitHub Action (PR comment)" section with full input/output documentation, usage examples (minimal + cross-format), and sample PR comment preview
+
 ## [2.0.0] — 2026-02-25
 
 ### Breaking Changes
@@ -252,6 +263,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Zero runtime dependencies
 - 31 tests across 12 suites
 
+[2.1.0]: https://github.com/qubuss/translation-toolkit/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/qubuss/translation-toolkit/compare/v1.9.0...v2.0.0
 [1.9.0]: https://github.com/qubuss/translation-toolkit/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/qubuss/translation-toolkit/compare/v1.7.0...v1.8.0

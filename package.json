@@ -1,6 +1,6 @@
 {
   "name": "translation-toolkit",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Zero-dependency CLI toolkit for managing .po translation files — export to CSV, import, browser preview with inline editing, validate, stats, and diff.",
   "keywords": [
     "po",

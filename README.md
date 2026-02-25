@@ -532,6 +532,83 @@ jobs:
       - run: translation-toolkit stats --dir src/i18n --ci
 ```
 
+### GitHub Action (PR comment)
+
+Use the built-in GitHub Action to automatically validate translations and post a rich Markdown report as a PR comment — with coverage bars, error/warning tables, and cross-format sync status.
+
+```yaml
+name: Translation Check
+on: pull_request
+
+jobs:
+  translations:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: qubuss/translation-toolkit@v2
+        with:
+          dir: src/i18n
+```
+
+#### Action Inputs
+
+| Input            | Default        | Description                                     |
+| ---------------- | -------------- | ----------------------------------------------- |
+| `dir`            | `translations` | Directory containing `.po` files                |
+| `post-comment`   | `true`         | Post/update results as PR comment               |
+| `fail-on-error`  | `true`         | Fail the action if validation errors are found   |
+| `cross-format`   | —              | Cross-format check: `json` or `i18next`          |
+| `format-dir`     | —              | Directory with JSON/i18next files to compare     |
+| `compat`         | `4`            | i18next compatibility version (`3` or `4`)       |
+
+#### Action Outputs
+
+| Output             | Description                          |
+| ------------------ | ------------------------------------ |
+| `error-count`      | Number of validation errors found    |
+| `warning-count`    | Number of validation warnings found  |
+| `overall-coverage` | Overall translation coverage (0–100) |
+
+#### Full example with cross-format sync check
+
+```yaml
+name: Translation Check
+on: pull_request
+
+jobs:
+  translations:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: qubuss/translation-toolkit@v2
+        id: i18n
+        with:
+          dir: src/i18n
+          cross-format: json
+          format-dir: src/locales
+          fail-on-error: true
+      - run: echo "Coverage is ${{ steps.i18n.outputs.overall-coverage }}%"
+```
+
+The action posts a comment like this on every PR:
+
+> ## 🌐 Translation Toolkit Report
+>
+> ### Validation
+> ✅ **No issues found**
+>
+> ### Statistics
+> | Language | Progress | Translated | Empty | Missing | Fuzzy |
+> |----------|----------|------------|-------|---------|-------|
+> | **en** (ref) | `████████████████████` 100% | 104/104 | 0 | 0 | 0 |
+> | pl | `███████████████████░` 96% | 100/104 | 1 | 3 | 7 |
+>
+> Existing comments are **updated** (not duplicated) on subsequent pushes.
+
 **Tip:** Use `--json` for machine-readable validation output, and `--severity error` to ignore fuzzy warnings:
 
 ```bash
