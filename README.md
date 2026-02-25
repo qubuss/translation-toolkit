@@ -571,6 +571,38 @@ jobs:
 | `warning-count`    | Number of validation warnings found  |
 | `overall-coverage` | Overall translation coverage (0–100) |
 
+#### Full example with `.po` project structure
+
+For a typical project with `.po` files in a `translations/` directory:
+
+```
+my-app/
+├── translations/
+│   ├── en-US.po
+│   ├── pl-PL.po
+│   └── de-DE.po
+└── .github/workflows/translations.yml
+```
+
+```yaml
+name: Translation Check
+on: pull_request
+
+jobs:
+  translations:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: qubuss/translation-toolkit@v2
+        with:
+          dir: translations
+          fail-on-error: true
+```
+
+Since `translations` is the default value for `dir`, you can omit it entirely if your `.po` files live there.
+
 #### Full example with cross-format sync check
 
 ```yaml
