@@ -8,7 +8,7 @@
 **Repozytorium:** https://github.com/qubuss/translation-toolkit
 **Zero dependencies** — kluczowy wyróżnik
 **Aktualna wersja:** v2.0.0 (25.02.2026)
-**Testy:** 336 testów / 81 suite'ów
+**Testy:** 373 testów / 100 suite'ów
 
 ---
 
@@ -178,12 +178,16 @@ Cel: rozszerzenie o eksport/import do JSON i i18next. Zmienia charakter paczki z
 - [x] 14 języków w mapowaniu CLDR + arabski (6 form), fallback na one/other
 - [x] Round-trip test: .po → i18next → .po (46 testów, 11 suites)
 
-#### 3.3 Walidacja cross-format
+#### 3.3 Walidacja cross-format ✅ DONE
 
-**Szacunek: 1 dzień**
+**Szacunek: 1 dzień** | **Zrobione: 25.02.2026**
 
-- [ ] Porównanie kluczy między .po a JSON/i18next
-- [ ] Exit code 1 jeśli są rozbieżności (CI-friendly)
+- [x] Porównanie kluczy między .po a JSON/i18next
+- [x] Exit code 1 jeśli są rozbieżności (CI-friendly)
+- [x] `crossFormatValidation()` w `lib/validate.js` — porównuje klucze .po vs JSON/i18next
+- [x] CLI: `--cross-format json|i18next --format-dir <path> --compat 3|4`
+- [x] `test/crossFormat.test.js` — 27 testów / 15 suite'ów
+- [x] Sync guard testy na fixtures + integration-project
 
 #### 3.4 Finalizacja v2.0+
 
@@ -238,8 +242,8 @@ Cel: rozszerzenie o eksport/import do JSON i i18next. Zmienia charakter paczki z
 - ~~**Fuzzy unfuzzy** — auto-unfuzzy przy import jeśli tłumaczenie zmienione?~~ → **DONE v1.6.0: explicit via `_status` column**
 - ~~**Validate --json schema** — ustalić dokładny format JSON~~ → **DONE v1.6.0: `{ errors, warnings, summary }`**
 - ~~**Integration test project** — ile kluczy, jakie edge cases, jakie języki~~ → **DONE: 112 kluczy, en/pl/de, 28 testów**
-- **A1: Extra plural forms** — en/de zyskują puste `msgstr[2]` przy round-trip z pl (nplurals=3). Opcje: `--strip-extra-plural-forms` flag, lub inteligentne pomijanie pustych form w eksporcie.
-- **Faza 3 scope** — zacząć od flat JSON (3.1) czy od razu i18next (3.2)? Jaki format kluczy w JSON (flat vs nested)?
+- **A1: Extra plural forms** — en/de zyskują puste `msgstr[2]` przy round-trip z pl (nplurals=3). Opcje: `--strip-extra-plural-forms` flag, lub inteligentne pomijanie pustych form w eksporcie. **Status: known behavior, nie-blocker. Do rozważenia w przyszłych wersjach.**
+- ~~**Faza 3 scope** — zacząć od flat JSON (3.1) czy od razu i18next (3.2)? Jaki format kluczy w JSON (flat vs nested)?~~ → **DONE: flat JSON (3.1) + i18next (3.2), flat keys z dot-separator**
 
 ## 5. Historia wydań
 
@@ -258,3 +262,5 @@ Cel: rozszerzenie o eksport/import do JSON i i18next. Zmienia charakter paczki z
 | v1.6.0  | 24.02.2026 | \_status column, unfuzzy import, --json, --severity                      | 257 / 62 |
 | v1.7.0  | 24.02.2026 | JSON export/import (--format json), nested auto-flatten                  | 290 / 70 |
 | v1.8.0  | 26.02.2026 | i18next export/import (--format i18next), CLDR v4 + v3, --compat         | 336 / 81 |
+| v1.9.0  | 25.02.2026 | Cross-format validation (--cross-format json/i18next)                    | 373 / 100 |
+| v2.0.0  | 25.02.2026 | BREAKING: rm po-csv-tool, engines≥18, index.js API, date fixes           | 373 / 100 |

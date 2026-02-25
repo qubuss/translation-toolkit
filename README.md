@@ -1,8 +1,10 @@
 # translation-toolkit
 
 [![npm version](https://img.shields.io/npm/v/translation-toolkit)](https://www.npmjs.com/package/translation-toolkit)
+[![npm downloads](https://img.shields.io/npm/dm/translation-toolkit)](https://www.npmjs.com/package/translation-toolkit)
 [![license](https://img.shields.io/npm/l/translation-toolkit)](LICENSE)
 [![node](https://img.shields.io/node/v/translation-toolkit)](package.json)
+[![zero dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](package.json)
 
 A zero-dependency CLI tool to manage [GNU gettext `.po`](https://www.gnu.org/software/gettext/manual/html_node/PO-Files.html) translation files — export to CSV, JSON, or i18next format, import back, preview in browser, validate, compute stats, and diff.
 
@@ -10,6 +12,7 @@ A zero-dependency CLI tool to manage [GNU gettext `.po`](https://www.gnu.org/sof
 
 ## Table of Contents
 
+- [Why translation-toolkit?](#why-translation-toolkit)
 - [Features](#features)
 - [Screenshots](#screenshots)
 - [Installation](#installation)
@@ -52,6 +55,28 @@ A zero-dependency CLI tool to manage [GNU gettext `.po`](https://www.gnu.org/sof
 - **Fuzzy detection & management** — `#, fuzzy` entries exported to `_status` column in CSV, highlighted in preview (yellow badge), counted in stats, warned in validate; on import, clear `_status` to unfuzzy, or keep `fuzzy` to preserve the flag
 - **Dark mode** — toggle between light and dark themes in the browser preview
 - **Interactive** — if multiple `.po` directories exist, prompts you to choose
+
+## Why translation-toolkit?
+
+| Feature | **translation-toolkit** | i18next-conv | po2json | gettext-parser |
+|---|---|---|---|---|
+| Dependencies | **0** | 6 | 3 | 2 |
+| PO → CSV | ✅ | ❌ | ❌ | ❌ |
+| PO → JSON | ✅ | ❌ | ✅ | ❌ |
+| PO → i18next | ✅ | ✅ | ❌ | ❌ |
+| Browser preview | ✅ | ❌ | ❌ | ❌ |
+| Inline editing | ✅ | ❌ | ❌ | ❌ |
+| Validation | ✅ | ❌ | ❌ | ❌ |
+| Statistics | ✅ | ❌ | ❌ | ❌ |
+| Diff | ✅ | ❌ | ❌ | ❌ |
+| Cross-format sync | ✅ | ❌ | ❌ | ❌ |
+| Fuzzy management | ✅ | ❌ | ❌ | ❌ |
+| Plural forms | ✅ | ✅ | partial | ✅ |
+| Round-trip safe | ✅ | ❌ | ❌ | ✅ |
+| CLI + API | ✅ | CLI only | API only | API only |
+| Programmatic API | ✅ (31 functions) | ❌ | ✅ | ✅ |
+
+**translation-toolkit** is a complete toolkit — not just a converter. It covers the entire translation workflow: export, edit (spreadsheet or browser), import, validate, track changes, and deploy previews. All with zero npm dependencies.
 
 ## Screenshots
 
@@ -261,7 +286,9 @@ mainMenu.send|Send packages|Wyślij przesyłki|Odeslat balíky
 
 On import, a new `cs-CZ.po` file is created automatically with the correct `Plural-Forms` header.
 
-Supported locale mappings: `en`, `pl`, `cs`, `sk`, `de`, `fr`, `es`, `it`, `pt`, `nl`, `hu`, `ro`, `uk`, `ru`. Unknown codes produce `xx-XX.po` format.
+Supported locale mappings: `en`, `pl`, `cs`, `sk`, `de`, `fr`, `es`, `it`, `pt`, `nl`, `hu`, `ro`, `uk`, `ru`, `ar`, `ja`, `zh`, `ko`. Unknown codes produce `xx-XX.po` format.
+
+Plural form categories (CLDR) are supported for 14+ languages including Arabic (6 forms). See `lib/i18nextFormat.js` for the full mapping.
 
 ### Preview (browser)
 
@@ -654,7 +681,49 @@ const {
 } = require("translation-toolkit");
 ```
 
-See each module in `lib/` for function signatures and JSDoc documentation.
+### Examples
+
+#### Parse a `.po` file
+
+```js
+const { parsePo } = require('translation-toolkit');
+
+const { header, entries, pluralEntries, fuzzyKeys } = parsePo('locales/en-US.po');
+
+console.log(`${entries.size} singular keys, ${pluralEntries.size} plural keys`);
+console.log(`Fuzzy entries: ${fuzzyKeys.size}`);
+
+// Access a specific translation
+console.log(entries.get('nav.home')); // "Home"
+```
+
+#### Validate translations programmatically
+
+```js
+const { validateTranslations } = require('translation-toolkit');
+
+const { errors, warnings, summary } = validateTranslations('locales/');
+
+if (errors.length > 0) {
+  console.error(`${errors.length} validation errors found`);
+  process.exit(1);
+}
+```
+
+#### Cross-format sync check
+
+```js
+const { crossFormatValidation } = require('translation-toolkit');
+
+const issues = crossFormatValidation('locales/', 'public/i18n/', 'i18next', 4);
+
+if (issues.length > 0) {
+  console.error('Exports are out of sync with .po files!');
+  issues.forEach(i => console.error(`  ${i.type}: ${i.key} (${i.lang})`));
+}
+```
+
+See each module in `lib/` for full function signatures and JSDoc documentation.
 
 ## Contributing
 
