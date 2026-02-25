@@ -111,14 +111,14 @@ npx translation-toolkit import translations.csv
 translation-toolkit export [options]
 ```
 
-| Option                 | Description                            | Default            |
-| ---------------------- | -------------------------------------- | ------------------ |
+| Option                 | Description                                                       | Default            |
+| ---------------------- | ----------------------------------------------------------------- | ------------------ |
 | `-o, --output <file>`  | Output CSV file path (or directory for `--format json`/`i18next`) | `translations.csv` |
-| `-d, --dir <path>`     | Translations directory                 | auto-discover      |
-| `-D, --delimiter <ch>` | Column delimiter                       | `\|`               |
-| `-f, --format <fmt>`   | Output format: `csv`, `json`, or `i18next` | `csv`          |
-| `--compat <ver>`       | i18next compatibility: `4` (CLDR) or `3` (legacy) | `4`        |
-| `--no-status`          | Omit the `_status` column from the CSV | include status     |
+| `-d, --dir <path>`     | Translations directory                                            | auto-discover      |
+| `-D, --delimiter <ch>` | Column delimiter                                                  | `\|`               |
+| `-f, --format <fmt>`   | Output format: `csv`, `json`, or `i18next`                        | `csv`              |
+| `--compat <ver>`       | i18next compatibility: `4` (CLDR) or `3` (legacy)                 | `4`                |
+| `--no-status`          | Omit the `_status` column from the CSV                            | include status     |
 
 **Example output** (`translations.csv`):
 
@@ -221,14 +221,14 @@ translation-toolkit import --format i18next locales/ --dir src/i18n
 translation-toolkit import <file.csv> [options]
 ```
 
-| Option                 | Description                                  | Default       |
-| ---------------------- | -------------------------------------------- | ------------- |
-| `-m, --merge`          | Keep existing keys not present in CSV        | replace all   |
-| `-n, --dry-run`        | Show what would change without writing files | off           |
-| `-d, --dir <path>`     | Translations directory                       | auto-discover |
-| `-D, --delimiter <ch>` | Column delimiter                             | `\|`          |
-| `-f, --format <fmt>`   | Input format: `csv`, `json`, or `i18next` | `csv`         |
-| `--compat <ver>`       | i18next compatibility: `4` (CLDR) or `3` (legacy) | `4`   |
+| Option                 | Description                                       | Default       |
+| ---------------------- | ------------------------------------------------- | ------------- |
+| `-m, --merge`          | Keep existing keys not present in CSV             | replace all   |
+| `-n, --dry-run`        | Show what would change without writing files      | off           |
+| `-d, --dir <path>`     | Translations directory                            | auto-discover |
+| `-D, --delimiter <ch>` | Column delimiter                                  | `\|`          |
+| `-f, --format <fmt>`   | Input format: `csv`, `json`, or `i18next`         | `csv`         |
+| `--compat <ver>`       | i18next compatibility: `4` (CLDR) or `3` (legacy) | `4`           |
 
 ### Import modes
 
@@ -303,11 +303,14 @@ Check all `.po` files for common issues. Useful in CI pipelines (exits with code
 translation-toolkit validate [options]
 ```
 
-| Option                  | Description                                      | Default       |
-| ----------------------- | ------------------------------------------------ | ------------- |
-| `-d, --dir <path>`      | Translations directory                           | auto-discover |
-| `--json`                | Output results as JSON (for CI/tooling)          |               |
-| `--severity <level>`    | Filter: `error` or `warning` (default: all)      | `warning`     |
+| Option                 | Description                                                   | Default       |
+| ---------------------- | ------------------------------------------------------------- | ------------- |
+| `-d, --dir <path>`     | Translations directory                                        | auto-discover |
+| `--json`               | Output results as JSON (for CI/tooling)                       |               |
+| `--severity <level>`   | Filter: `error` or `warning` (default: all)                   | `warning`     |
+| `--cross-format <fmt>` | Compare .po keys against exported format: `json` or `i18next` |               |
+| `--format-dir <path>`  | Directory with exported JSON/i18next files                    |               |
+| `--compat <ver>`       | i18next compatibility version (3 or 4)                        | `4`           |
 
 Checks performed:
 
@@ -323,12 +326,20 @@ The reference language is auto-detected as the one with the most keys (typically
 
 ```json
 {
-  "errors": [{ "type": "missing-key", "lang": "pl", "key": "bye", "message": "..." }],
-  "warnings": [{ "type": "fuzzy-entry", "lang": "pl", "key": "hello", "message": "..." }],
+  "errors": [
+    { "type": "missing-key", "lang": "pl", "key": "bye", "message": "..." }
+  ],
+  "warnings": [
+    { "type": "fuzzy-entry", "lang": "pl", "key": "hello", "message": "..." }
+  ],
   "summary": {
-    "refLang": "en", "languages": ["en", "pl"],
-    "totalKeys": 50, "totalPluralKeys": 4, "totalFuzzyKeys": 3,
-    "errorCount": 1, "warningCount": 1
+    "refLang": "en",
+    "languages": ["en", "pl"],
+    "totalKeys": 50,
+    "totalPluralKeys": 4,
+    "totalFuzzyKeys": 3,
+    "errorCount": 1,
+    "warningCount": 1
   }
 }
 ```
@@ -338,6 +349,28 @@ The reference language is auto-detected as the one with the most keys (typically
 ```bash
 translation-toolkit validate --severity error --json
 ```
+
+**Cross-format validation** — verify that exported JSON or i18next files are in sync with `.po` source files. Reports missing keys, extra keys, value mismatches, and language coverage issues:
+
+```bash
+# Check JSON exports against .po files
+translation-toolkit validate --dir src/i18n --cross-format json --format-dir locales/json/
+
+# Check i18next exports against .po files
+translation-toolkit validate --dir src/i18n --cross-format i18next --format-dir locales/
+
+# i18next v3 compat mode
+translation-toolkit validate --dir src/i18n --cross-format i18next --format-dir locales/ --compat 3
+```
+
+Cross-format issue types:
+
+- **cross-format-missing-key** — key in `.po` but missing from export (error)
+- **cross-format-extra-key** — key in export but missing from `.po` (warning)
+- **cross-format-value-mismatch** — values differ between `.po` and export (warning)
+- **cross-format-missing-lang** — `.po` language has no export file (error)
+- **cross-format-extra-lang** — export file has no matching `.po` (warning)
+- **cross-format-missing-plural / extra-plural / plural-mismatch** — plural form discrepancies
 
 The reference language is auto-detected as the one with the most keys (typically `en`).
 
@@ -532,6 +565,10 @@ translation-toolkit preview --static -o docs/preview.html
 translation-toolkit validate
 translation-toolkit validate --dir src/i18n
 
+# Cross-format validation — verify exports are in sync with .po
+translation-toolkit validate --cross-format json --format-dir locales/json/
+translation-toolkit validate --cross-format i18next --format-dir locales/ --dir src/i18n
+
 # Translation statistics
 translation-toolkit stats
 translation-toolkit stats --dir src/i18n
@@ -575,15 +612,15 @@ git diff src/translations/
 
 ## Roadmap
 
-| Phase | Feature                                                   | Status  |
-| ----- | --------------------------------------------------------- | ------- |
-| 1     | Core CLI (export, import, preview, validate, stats, diff) | ✅ Done |
-| 1.3   | DX improvements (dry-run, watch mode, port auto-detect)   | ✅ Done |
-| 1.4   | CI/CD mode (`--ci` flag, non-interactive, exit codes)     | ✅ Done |
-| 1.5   | Static preview export (`--static`) for GitHub Pages       | ✅ Done |
-| 2     | Plural forms (`msgid_plural` / `msgstr[N]`)               | ✅ Done |
+| Phase | Feature                                                   | Status                 |
+| ----- | --------------------------------------------------------- | ---------------------- |
+| 1     | Core CLI (export, import, preview, validate, stats, diff) | ✅ Done                |
+| 1.3   | DX improvements (dry-run, watch mode, port auto-detect)   | ✅ Done                |
+| 1.4   | CI/CD mode (`--ci` flag, non-interactive, exit codes)     | ✅ Done                |
+| 1.5   | Static preview export (`--static`) for GitHub Pages       | ✅ Done                |
+| 2     | Plural forms (`msgid_plural` / `msgstr[N]`)               | ✅ Done                |
 | 3     | Additional formats: JSON, XLIFF, Android XML              | 🔄 JSON + i18next done |
-| 4     | Custom validation rules                                   | Planned |
+| 4     | Custom validation rules                                   | Planned                |
 
 ## Contributing
 

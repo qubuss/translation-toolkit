@@ -2,7 +2,7 @@
 
 ## Status: AKTYWNY — v1.8.0 wydane, Faza 3.2 done, 3.3 następna
 
-**Strategia:** Iteracyjne wydania — solidne fundamenty (Faza 1 ✅), polish & DX (v1.2–v1.4 ✅), plural forms (Faza 2 ✅), polish (v1.5.1–v1.5.2 ✅), fuzzy CSV + validate improvements (v1.6.0 ✅), JSON format (v1.7.0 ✅), i18next format (v1.8.0 ✅), teraz cross-format validation (Faza 3.3). Każda faza kończy się publikacją na npm.
+**Strategia:** Iteracyjne wydania — solidne fundamenty (Faza 1 ✅), polish & DX (v1.2–v1.4 ✅), plural forms (Faza 2 ✅), polish (v1.5.1–v1.5.2 ✅), fuzzy CSV + validate improvements (v1.6.0 ✅), JSON format (v1.7.0 ✅), i18next format (v1.8.0 ✅), cross-format validation (v1.9.0 ✅), teraz finalizacja v2.0 (Faza 3.4). Każda faza kończy się publikacją na npm.
 
 **Nazwa paczki:** `translation-toolkit` ✅ (opublikowana na npm)
 **Repozytorium:** https://github.com/qubuss/translation-toolkit
@@ -195,20 +195,20 @@ Cel: rozszerzenie o eksport/import do JSON i i18next. Zmienia charakter paczki z
 
 ## 2. Podsumowanie szacunków
 
-| Faza             | Zakres                                 | Szacunek | Status                               |
-| ---------------- | -------------------------------------- | -------- | ------------------------------------ |
-| **Faza 1**       | multiline + msgctxt + testy            | ~3-4 dni | ✅ v1.0–v1.1 (20.02.2026)            |
-| **Faza 1.x**     | preview, watch, static, --ci, bugfixes | ~5 dni   | ✅ v1.2–v1.4.1 (22.02.2026)          |
-| **Faza 2**       | plural forms (fix data loss)           | ~3 dni   | ✅ v1.5.0 (23.02.2026)               |
-| **v1.5.1–1.5.2** | delimiter, merge, fuzzy, tests         | ~1.5 dni | ✅ v1.5.2 (23.02.2026)               |
-| **v1.6.0**       | fuzzy CSV, validate --json/--severity  | ~1.5 dni | ✅ v1.6.0 (24.02.2026), 257/62       |
-| **v1.7.0**       | JSON format (flat export/import)       | ~0.5 dnia| ✅ v1.7.0 (24.02.2026), 290/70       |
-| **v1.8.0**       | i18next format (CLDR v4 + v3 legacy)   | ~0.5 dnia| ✅ v1.8.0 (26.02.2026), 336/81       |
-| **Faza 3.3**     | cross-format validation                | ~1 dzień | ⏳ następna                           |
-| **Faza 3.4**     | finalizacja v2.0                       | ~1 dzień | ⏳ po 3.3                             |
+| Faza             | Zakres                                 | Szacunek  | Status                          |
+| ---------------- | -------------------------------------- | --------- | ------------------------------- |
+| **Faza 1**       | multiline + msgctxt + testy            | ~3-4 dni  | ✅ v1.0–v1.1 (20.02.2026)       |
+| **Faza 1.x**     | preview, watch, static, --ci, bugfixes | ~5 dni    | ✅ v1.2–v1.4.1 (22.02.2026)     |
+| **Faza 2**       | plural forms (fix data loss)           | ~3 dni    | ✅ v1.5.0 (23.02.2026)          |
+| **v1.5.1–1.5.2** | delimiter, merge, fuzzy, tests         | ~1.5 dni  | ✅ v1.5.2 (23.02.2026)          |
+| **v1.6.0**       | fuzzy CSV, validate --json/--severity  | ~1.5 dni  | ✅ v1.6.0 (24.02.2026), 257/62  |
+| **v1.7.0**       | JSON format (flat export/import)       | ~0.5 dnia | ✅ v1.7.0 (24.02.2026), 290/70  |
+| **v1.8.0**       | i18next format (CLDR v4 + v3 legacy)   | ~0.5 dnia | ✅ v1.8.0 (26.02.2026), 336/81  |
+| **v1.9.0**       | cross-format validation                | ~0.5 dnia | ✅ v1.9.0 (25.07.2025), 373/100 |
+| **Faza 3.4**     | finalizacja v2.0                       | ~1 dzień  | ⏳ po 3.3                       |
 
-**Dotychczasowy czas**: ~15 dni (Faza 1 + 1.x + 2 + v1.5.1–1.5.2 + v1.6.0 + v1.7.0 + v1.8.0)
-**Pozostało**: ~2 dni (Faza 3.3 + 3.4)
+**Dotychczasowy czas**: ~15.5 dni (Faza 1 + 1.x + 2 + v1.5.1–1.5.2 + v1.6.0 + v1.7.0 + v1.8.0 + v1.9.0)
+**Pozostało**: ~1 dzień (Faza 3.4)
 
 ---
 
@@ -239,18 +239,18 @@ Cel: rozszerzenie o eksport/import do JSON i i18next. Zmienia charakter paczki z
 
 ## 5. Historia wydań
 
-| Wersja     | Data       | Kluczowe zmiany                                                          | Testy    |
-| ---------- | ---------- | ------------------------------------------------------------------------ | -------- |
-| v1.0.0     | 20.02.2026 | Initial release — 6 commands, multiline, msgctxt                         | 31 / 12  |
-| v1.2.0     | 20.02.2026 | Preview server, --watch, port auto-increment                             | 69 / 16  |
-| v1.3.0     | 21.02.2026 | --watch fix (fs), --dry-run, port auto-increment                         | 71 / 16  |
-| v1.3.2     | 21.02.2026 | Plural-Forms, blank lines, comments preservation                         | 71 / 16  |
-| v1.4.0     | 22.02.2026 | --static HTML, sticky header, --ci                                       | 91 / 20  |
-| v1.4.1     | 23.02.2026 | Static → folder, --exit-zero, port fix                                   | 96 / 22  |
-| v1.5.0     | 23.02.2026 | Plural forms — full pipeline (export/import/validate/stats/preview/diff) | 126 / 27 |
-| v1.5.1     | 23.02.2026 | Custom delimiter -D, --merge mode, test expansion                        | 187 / 46 |
-| v1.5.2     | 23.02.2026 | Fuzzy detection (validate/stats/preview), A2/A3 fixes                    | 204 / 50 |
-| v1.5.2+    | 23.02.2026 | Integration test project (3 langs, 112 keys, 28 tests)                   | 232 / 58 |
-| v1.6.0     | 24.02.2026 | _status column, unfuzzy import, --json, --severity                       | 257 / 62 |
-| v1.7.0     | 24.02.2026 | JSON export/import (--format json), nested auto-flatten                   | 290 / 70 |
-| v1.8.0     | 26.02.2026 | i18next export/import (--format i18next), CLDR v4 + v3, --compat         | 336 / 81 |
+| Wersja  | Data       | Kluczowe zmiany                                                          | Testy    |
+| ------- | ---------- | ------------------------------------------------------------------------ | -------- |
+| v1.0.0  | 20.02.2026 | Initial release — 6 commands, multiline, msgctxt                         | 31 / 12  |
+| v1.2.0  | 20.02.2026 | Preview server, --watch, port auto-increment                             | 69 / 16  |
+| v1.3.0  | 21.02.2026 | --watch fix (fs), --dry-run, port auto-increment                         | 71 / 16  |
+| v1.3.2  | 21.02.2026 | Plural-Forms, blank lines, comments preservation                         | 71 / 16  |
+| v1.4.0  | 22.02.2026 | --static HTML, sticky header, --ci                                       | 91 / 20  |
+| v1.4.1  | 23.02.2026 | Static → folder, --exit-zero, port fix                                   | 96 / 22  |
+| v1.5.0  | 23.02.2026 | Plural forms — full pipeline (export/import/validate/stats/preview/diff) | 126 / 27 |
+| v1.5.1  | 23.02.2026 | Custom delimiter -D, --merge mode, test expansion                        | 187 / 46 |
+| v1.5.2  | 23.02.2026 | Fuzzy detection (validate/stats/preview), A2/A3 fixes                    | 204 / 50 |
+| v1.5.2+ | 23.02.2026 | Integration test project (3 langs, 112 keys, 28 tests)                   | 232 / 58 |
+| v1.6.0  | 24.02.2026 | \_status column, unfuzzy import, --json, --severity                      | 257 / 62 |
+| v1.7.0  | 24.02.2026 | JSON export/import (--format json), nested auto-flatten                  | 290 / 70 |
+| v1.8.0  | 26.02.2026 | i18next export/import (--format i18next), CLDR v4 + v3, --compat         | 336 / 81 |

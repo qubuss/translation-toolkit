@@ -59,6 +59,9 @@ VALIDATE OPTIONS
   -d, --dir <path>      Translations directory (default: auto-discover)
   --json                Output results as JSON (for CI/tooling integration)
   --severity <level>    Filter issues: "error" or "warning" (default: warning = all)
+  --cross-format <fmt>  Compare .po keys against exported format: json or i18next
+  --format-dir <path>   Directory with exported JSON/i18next files (required with --cross-format)
+  --compat <ver>        i18next compatibility: 4 (default, CLDR) or 3 (legacy)
 
 STATS OPTIONS
   -d, --dir <path>      Translations directory (default: auto-discover)
@@ -98,6 +101,8 @@ EXAMPLES
   translation-toolkit validate --dir src/i18n
   translation-toolkit validate --json
   translation-toolkit validate --severity error
+  translation-toolkit validate --cross-format json --format-dir locales/json/ --dir src/i18n
+  translation-toolkit validate --cross-format i18next --format-dir locales/ --dir src/i18n
   translation-toolkit stats
   translation-toolkit stats --dir src/i18n
   translation-toolkit diff old.csv new.csv

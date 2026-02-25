@@ -6,7 +6,7 @@ Wklej poniższy prompt w czacie nowego projektu (który ma pliki .po):
 
 ## PROMPT START
 
-Zainstaluj i przetestuj narzędzie `translation-toolkit@1.8.0` (npm) na tym projekcie.
+Zainstaluj i przetestuj narzędzie `translation-toolkit@1.9.0` (npm) na tym projekcie.
 Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj raport.
 
 > Komendy: `export`, `import`, `preview`, `validate`, `stats`, `diff`
@@ -14,8 +14,8 @@ Wykonaj WSZYSTKIE poniższe kroki po kolei, notuj wyniki, a na końcu wygeneruj 
 ### 0. Instalacja
 
 ```bash
-npm install -g translation-toolkit@1.8.0
-translation-toolkit --version   # powinno wypisać 1.7.0
+npm install -g translation-toolkit@1.9.0
+translation-toolkit --version   # powinno wypisać 1.9.0
 ```
 
 ### 1. Odkrywanie plików .po
@@ -643,7 +643,7 @@ translation-toolkit stats --dir /tmp/tt-fuzzy-test
 - [ ] Validate raportuje 1 fuzzy-entry warning
 - [ ] Stats pokazuje `Fuzzy: 1 entries need review`
 
-### 15. Test _STATUS COLUMN & UNFUZZY (v1.6.0)
+### 15. Test \_STATUS COLUMN & UNFUZZY (v1.6.0)
 
 **Export z kolumną `_status`:**
 
@@ -827,6 +827,64 @@ translation-toolkit import --format i18next --compat 3 /tmp/tt-i18next-v3 --dir 
 
 - [ ] Import v3 poprawnie mapuje `_plural` → msgstr[1], `_0/_1/_2` → msgstr[0]/[1]/[2]
 
+### 19. Test CROSS-FORMAT VALIDATION (v1.9.0)
+
+```bash
+# Przygotowanie — wyeksportuj JSON i i18next
+PO_DIR="ścieżka/do/po"
+translation-toolkit export --format json -o /tmp/tt-json --dir "$PO_DIR" --ci
+translation-toolkit export --format i18next -o /tmp/tt-i18next --dir "$PO_DIR" --ci
+```
+
+**Testy walidacji cross-format:**
+
+```bash
+# Test 1: In-sync JSON — exit code 0
+translation-toolkit validate --dir "$PO_DIR" --cross-format json --format-dir /tmp/tt-json --ci
+echo "Exit code: $?"
+```
+
+- [ ] Exit code = 0
+- [ ] Output zawiera "in sync"
+
+```bash
+# Test 2: In-sync i18next — exit code 0
+translation-toolkit validate --dir "$PO_DIR" --cross-format i18next --format-dir /tmp/tt-i18next --ci
+echo "Exit code: $?"
+```
+
+- [ ] Exit code = 0
+
+```bash
+# Test 3: Zmodyfikuj JSON i sprawdź — usunięcie klucza → error
+cp -r /tmp/tt-json /tmp/tt-json-modified
+# Usuń pierwszy klucz z en.json
+node -e "const f=require('fs');const d=JSON.parse(f.readFileSync('/tmp/tt-json-modified/en.json'));const keys=Object.keys(d);delete d[keys[0]];f.writeFileSync('/tmp/tt-json-modified/en.json',JSON.stringify(d,null,2))"
+translation-toolkit validate --dir "$PO_DIR" --cross-format json --format-dir /tmp/tt-json-modified --ci
+echo "Exit code: $?"
+```
+
+- [ ] Exit code = 1
+- [ ] Output zawiera "missing" + nazwa usuniętego klucza
+
+```bash
+# Test 4: --json output z --cross-format
+translation-toolkit validate --dir "$PO_DIR" --cross-format json --format-dir /tmp/tt-json-modified --json --ci
+```
+
+- [ ] Poprawny JSON z sekcją `crossFormat`
+- [ ] `crossFormat.errors` zawiera brakujący klucz
+- [ ] `crossFormat.summary` z `poLanguages`, `formatLanguages`, `totalPoKeys`, `totalFormatKeys`
+
+```bash
+# Test 5: --severity error filtruje wartości mismatches (same klucze, inne wartości)
+node -e "const f=require('fs');const d=JSON.parse(f.readFileSync('/tmp/tt-json/en.json'));const keys=Object.keys(d);d[keys[0]]='ZMIENIONA WARTOŚĆ';f.writeFileSync('/tmp/tt-json/en.json',JSON.stringify(d,null,2))"
+translation-toolkit validate --dir "$PO_DIR" --cross-format json --format-dir /tmp/tt-json --severity error --ci
+echo "Exit code: $?"
+```
+
+- [ ] Exit code = 0 (value mismatch to warning, nie error)
+
 ### 11. Anomalie i niestandardowe zachowania
 
 **WAŻNE**: Przez cały czas testowania notuj WSZYSTKIE niespodziewane zachowania, nawet jeśli nie są błędami. Anomalie to rzeczy, które Cię zaskoczyły, wymagały dodatkowej interwencji lub mogą być problemem dla innych użytkowników.
@@ -916,6 +974,9 @@ Wygeneruj raport **dokładnie** w poniższym formacie:
 | **R24** | **--format i18next export v4** | ✅/❌ | v1.8.0 new: CLDR suffixes _one/_other/_few/_many |
 | **R25** | **--format i18next --compat 3** | ✅/❌ | v1.8.0 new: v3 legacy _plural/_0/_1/_2 |
 | **R26** | **--format i18next round-trip** | ✅/❌ | v1.8.0 new: i18next → .po preserves singular+plural |
+| **R27** | **validate --cross-format json** | ✅/❌ | v1.9.0 new: no issues for in-sync JSON exports |
+| **R28** | **validate --cross-format missing key** | ✅/❌ | v1.9.0 new: detects .po key missing from JSON |
+| **R29** | **validate --cross-format exit code 1** | ✅/❌ | v1.9.0 new: exit 1 when cross-format errors found |
 
 ### Anomalie
 

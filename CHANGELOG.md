@@ -3,6 +3,22 @@
 All notable changes to **translation-toolkit** are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.9.0] — 2025-07-25
+
+### Added
+
+- **`--cross-format` for `validate`** — compare `.po` keys against exported JSON or i18next files to detect synchronization issues; reports missing keys, extra keys, value mismatches, and language coverage gaps; CI-friendly with exit code 1 on errors
+- **`--format-dir` for `validate`** — specify the directory containing exported JSON/i18next files (required with `--cross-format`)
+- **`--compat` for `validate`** — i18next compatibility version for cross-format checks (3 or 4, default: 4)
+- **`crossFormatValidation()` core function** — new exported function in `lib/validate.js`; compares singular/plural entries between `.po` and JSON/i18next exports; returns typed issues: `cross-format-missing-key`, `cross-format-extra-key`, `cross-format-value-mismatch`, `cross-format-missing-lang`, `cross-format-extra-lang`, `cross-format-missing-plural`, `cross-format-extra-plural`, `cross-format-plural-mismatch`
+- **Cross-format JSON output** — when `--json` is used with `--cross-format`, output includes a `crossFormat` section with errors, warnings, and summary statistics
+- **Coloured cross-format report** — terminal output groups issues by language with error/warning counts, styled consistently with existing validation report
+
+### Tests
+
+- 373 tests across 100 suites (was 346 / 85)
+- New `test/crossFormat.test.js` — 27 tests / 15 suites covering JSON sync, i18next sync, missing/extra keys, value mismatches, missing/extra languages, plural sync, msgctxt keys, fixture reference checks (4 fixtures), CLI exit codes, JSON output, severity filter, error handling
+
 ## [1.8.0] — 2025-02-26
 
 ### Added
@@ -214,6 +230,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - 31 tests across 12 suites
 
 [1.7.0]: https://github.com/qubuss/translation-toolkit/compare/v1.6.0...v1.7.0
+[1.9.0]: https://github.com/qubuss/translation-toolkit/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/qubuss/translation-toolkit/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/qubuss/translation-toolkit/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/qubuss/translation-toolkit/compare/v1.5.2...v1.6.0

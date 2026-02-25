@@ -37,7 +37,9 @@ lib/
   i18nextFormat.js → exportToI18next, importFromI18next, parseI18nextFile, discoverI18nextFiles (core)
                + GETTEXT_TO_CLDR mapping, CLDR_CATEGORIES; no CLI runner (dispatched from export/import)
                supports --compat 3 (legacy _plural/_N) and 4 (CLDR _one/_other/_few/_many)
-  validate.js  → validateTranslations (core) + runValidate (CLI runner)
+  validate.js  → validateTranslations, crossFormatValidation (core) + runValidate (CLI runner)
+               crossFormatValidation compares .po keys vs JSON/i18next exports
+               --cross-format json|i18next --format-dir <path> --compat 3|4
   stats.js     → computeStats (core) + runStats (CLI runner)
   diff.js      → computeDiff, parseCsvFile, loadPoAsCsv (core) + runDiff (CLI runner)
   preview.js   → buildHtml, generateStaticPreview (core) + runPreview (CLI runner)
@@ -166,22 +168,23 @@ npm test          # runs: node --test test/*.test.js
 ```
 
 - **Framework:** `node:test` with `describe`/`it`/`before`/`after` and `node:assert/strict`
-- **~346 tests across 85 suites** (update this count in CHANGELOG when tests change)
+- **~373 tests across 100 suites** (update this count in CHANGELOG when tests change)
 - **Temp dirs:** Tests create `.tmp*` directories in `test/`, cleaned up in `after()` hooks
 - **CLI tests:** Use `child_process.execFileSync` to test actual binary behavior and exit codes
 - **No mocking framework** — uses console.log capture (`process.stdout.write`) for output testing
 
 ### Test File Mapping
 
-| Feature area                                              | Test file           | Tests via                       |
-| --------------------------------------------------------- | ------------------- | ------------------------------- |
-| PO parser, escaping, formatting, plural parse/write/patch | `poParser.test.js`    | Direct function calls           |
-| Export → import round-trip, plural round-trip             | `roundtrip.test.js`   | Direct function calls           |
-| JSON export/import, round-trip, nested flatten, CLI       | `jsonFormat.test.js`  | Direct + `execFileSync`         |
-| i18next export/import, CLDR v4, v3 compat, round-trip     | `i18nextFormat.test.js` | Direct + `execFileSync`       |
-| Preview HTML, static export                               | `preview.test.js`     | Function calls + `execFileSync` |
-| 3-language e2e (parse, export, import, validate, stats)   | `integration.test.js` | Direct + `execFileSync`         |
-| Diff computation, CLI exit codes, plural diff             | `diff.test.js`      | Function calls + `execFileSync` |
+| Feature area                                              | Test file               | Tests via                       |
+| --------------------------------------------------------- | ----------------------- | ------------------------------- |
+| PO parser, escaping, formatting, plural parse/write/patch | `poParser.test.js`      | Direct function calls           |
+| Export → import round-trip, plural round-trip             | `roundtrip.test.js`     | Direct function calls           |
+| JSON export/import, round-trip, nested flatten, CLI       | `jsonFormat.test.js`    | Direct + `execFileSync`         |
+| i18next export/import, CLDR v4, v3 compat, round-trip     | `i18nextFormat.test.js` | Direct + `execFileSync`         |
+| Preview HTML, static export                               | `preview.test.js`       | Function calls + `execFileSync` |
+| 3-language e2e (parse, export, import, validate, stats)   | `integration.test.js`   | Direct + `execFileSync`         |
+| Diff computation, CLI exit codes, plural diff             | `diff.test.js`          | Function calls + `execFileSync` |
+| Cross-format validation (.po vs JSON/i18next sync)        | `crossFormat.test.js`   | Direct + `execFileSync`         |
 
 **Note:** `preview.test.js` references the legacy CLI path (`bin/po-csv-tool.js`), while `diff.test.js` uses the new path (`bin/translation-toolkit.js`). This inconsistency exists but both work.
 
@@ -270,9 +273,9 @@ git push --tags
 
 ## 📋 Mandatory: Test Fixtures — Keep in Sync
 
-Test fixtures in `test/fixtures/` are the foundation of roundtrip tests. **When adding new functionality, update fixtures simultaneously.**
+Test fixtures in `test/fixtures/` and `test/integration-project/` are the foundation of roundtrip, export-matches-fixture, and cross-format sync guard tests. **When adding new functionality or modifying .po entries, update ALL fixture formats simultaneously.** Multiple automated tests will fail if fixtures drift out of sync.
 
-### Files
+### `test/fixtures/` Files
 
 | File                        | Purpose                                                                                                                         |
 | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
@@ -285,12 +288,44 @@ Test fixtures in `test/fixtures/` are the foundation of roundtrip tests. **When 
 | `i18next/en.json`           | i18next v4 (CLDR) export of English PO — `_one`/`_other` plural suffixes                                                        |
 | `i18next/pl.json`           | i18next v4 (CLDR) export of Polish PO — `_one`/`_few`/`_many` plural suffixes                                                   |
 
+### `test/integration-project/` Files
+
+| File                          | Purpose                                                                      |
+| ----------------------------- | ---------------------------------------------------------------------------- |
+| `translations/en-US.po`       | English PO — 104 singular + 8 plural entries, 7 fuzzy                        |
+| `translations/pl-PL.po`       | Polish PO — matching entries with Polish translations                        |
+| `translations/de-DE.po`       | German PO — matching entries with German translations                        |
+| `json/en.json`                | Flat JSON export of English integration PO                                   |
+| `json/pl.json`                | Flat JSON export of Polish integration PO                                    |
+| `json/de.json`                | Flat JSON export of German integration PO                                    |
+| `i18next/en.json`             | i18next v4 export of English integration PO                                  |
+| `i18next/pl.json`             | i18next v4 export of Polish integration PO                                   |
+| `i18next/de.json`             | i18next v4 export of German integration PO                                   |
+
+### Sync Guard Tests
+
+These tests **automatically fail** if any fixture drifts out of sync — they are your safety net:
+
+- `jsonFormat.test.js` → "export matches fixture" — re-exports `.po` and compares byte-for-byte with `json/*.json`
+- `i18nextFormat.test.js` → "export matches fixture" — re-exports `.po` and compares with `i18next/*.json`
+- `crossFormat.test.js` → "fixtures" suite — runs `crossFormatValidation()` on both `test/fixtures/` and `test/integration-project/` for JSON and i18next, expects 0 issues
+- `roundtrip.test.js` — exports `.po` → CSV, imports back, compares with original
+
 ### Rules
 
-1. **All formats at once**: When adding a new entry, add it to **both** `.po` files AND `translations.csv` AND re-generate `json/` and `i18next/` fixtures simultaneously. The "export matches fixture" tests will fail if they're out of sync.
+1. **All formats at once**: When adding a new entry, add it to **both** `.po` files AND `translations.csv` AND re-generate `json/` and `i18next/` fixtures simultaneously. The sync guard tests will fail if they're out of sync.
 2. **Modified CSV too**: If the new entry should appear in diff tests, add it (possibly with a changed value) to `translations-modified.csv` as well.
-3. **Regenerate JSON/i18next fixtures**: Run `node -e "require('./lib/jsonFormat').exportToJson('test/fixtures/json','test/fixtures')"` and `node -e "require('./lib/i18nextFormat').exportToI18next('test/fixtures/i18next','test/fixtures',{compatibilityJSON:4})"` after modifying `.po` files.
-4. **Integration project fixtures**: Same rule applies to `test/integration-project/json/` and `test/integration-project/i18next/` — regenerate after modifying integration `.po` files.
+3. **Regenerate fixtures after modifying .po files**: Run these commands after any `.po` change:
+   ```bash
+   # Fixtures (2 languages)
+   node -e "require('./lib/jsonFormat').exportToJson('test/fixtures/json','test/fixtures')"
+   node -e "require('./lib/i18nextFormat').exportToI18next('test/fixtures/i18next','test/fixtures',{compatibilityJSON:4})"
+
+   # Integration project (3 languages)
+   node -e "require('./lib/jsonFormat').exportToJson('test/integration-project/json','test/integration-project/translations')"
+   node -e "require('./lib/i18nextFormat').exportToI18next('test/integration-project/i18next','test/integration-project/translations',{compatibilityJSON:4})"
+   ```
+4. **Always run `npm test` after regenerating** — all 373+ tests must pass, including the sync guards.
 5. **Matching structure**: CSV must have the key in column 1, then language columns matching the `.po` file locale short codes (`en`, `pl`).
 6. **New test file**: For a new command or major feature, create `test/<feature>.test.js` following the existing pattern (`describe`/`it`, `assert/strict`, temp dir cleanup).
 
