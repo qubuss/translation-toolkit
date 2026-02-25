@@ -58,23 +58,23 @@ A zero-dependency CLI tool to manage [GNU gettext `.po`](https://www.gnu.org/sof
 
 ## Why translation-toolkit?
 
-| Feature | **translation-toolkit** | i18next-conv | po2json | gettext-parser |
-|---|---|---|---|---|
-| Dependencies | **0** | 6 | 3 | 2 |
-| PO → CSV | ✅ | ❌ | ❌ | ❌ |
-| PO → JSON | ✅ | ❌ | ✅ | ❌ |
-| PO → i18next | ✅ | ✅ | ❌ | ❌ |
-| Browser preview | ✅ | ❌ | ❌ | ❌ |
-| Inline editing | ✅ | ❌ | ❌ | ❌ |
-| Validation | ✅ | ❌ | ❌ | ❌ |
-| Statistics | ✅ | ❌ | ❌ | ❌ |
-| Diff | ✅ | ❌ | ❌ | ❌ |
-| Cross-format sync | ✅ | ❌ | ❌ | ❌ |
-| Fuzzy management | ✅ | ❌ | ❌ | ❌ |
-| Plural forms | ✅ | ✅ | partial | ✅ |
-| Round-trip safe | ✅ | ❌ | ❌ | ✅ |
-| CLI + API | ✅ | CLI only | API only | API only |
-| Programmatic API | ✅ (31 functions) | ❌ | ✅ | ✅ |
+| Feature           | **translation-toolkit** | i18next-conv | po2json  | gettext-parser |
+| ----------------- | ----------------------- | ------------ | -------- | -------------- |
+| Dependencies      | **0**                   | 6            | 3        | 2              |
+| PO → CSV          | ✅                      | ❌           | ❌       | ❌             |
+| PO → JSON         | ✅                      | ❌           | ✅       | ❌             |
+| PO → i18next      | ✅                      | ✅           | ❌       | ❌             |
+| Browser preview   | ✅                      | ❌           | ❌       | ❌             |
+| Inline editing    | ✅                      | ❌           | ❌       | ❌             |
+| Validation        | ✅                      | ❌           | ❌       | ❌             |
+| Statistics        | ✅                      | ❌           | ❌       | ❌             |
+| Diff              | ✅                      | ❌           | ❌       | ❌             |
+| Cross-format sync | ✅                      | ❌           | ❌       | ❌             |
+| Fuzzy management  | ✅                      | ❌           | ❌       | ❌             |
+| Plural forms      | ✅                      | ✅           | partial  | ✅             |
+| Round-trip safe   | ✅                      | ❌           | ❌       | ✅             |
+| CLI + API         | ✅                      | CLI only     | API only | API only       |
+| Programmatic API  | ✅ (31 functions)       | ❌           | ✅       | ✅             |
 
 **translation-toolkit** is a complete toolkit — not just a converter. It covers the entire translation workflow: export, edit (spreadsheet or browser), import, validate, track changes, and deploy previews. All with zero npm dependencies.
 
@@ -686,23 +686,24 @@ const {
 #### Parse a `.po` file
 
 ```js
-const { parsePo } = require('translation-toolkit');
+const { parsePo } = require("translation-toolkit");
 
-const { header, entries, pluralEntries, fuzzyKeys } = parsePo('locales/en-US.po');
+const { header, entries, pluralEntries, fuzzyKeys } =
+  parsePo("locales/en-US.po");
 
 console.log(`${entries.size} singular keys, ${pluralEntries.size} plural keys`);
 console.log(`Fuzzy entries: ${fuzzyKeys.size}`);
 
 // Access a specific translation
-console.log(entries.get('nav.home')); // "Home"
+console.log(entries.get("nav.home")); // "Home"
 ```
 
 #### Validate translations programmatically
 
 ```js
-const { validateTranslations } = require('translation-toolkit');
+const { validateTranslations } = require("translation-toolkit");
 
-const { errors, warnings, summary } = validateTranslations('locales/');
+const { errors, warnings, summary } = validateTranslations("locales/");
 
 if (errors.length > 0) {
   console.error(`${errors.length} validation errors found`);
@@ -713,13 +714,13 @@ if (errors.length > 0) {
 #### Cross-format sync check
 
 ```js
-const { crossFormatValidation } = require('translation-toolkit');
+const { crossFormatValidation } = require("translation-toolkit");
 
-const issues = crossFormatValidation('locales/', 'public/i18n/', 'i18next', 4);
+const issues = crossFormatValidation("locales/", "public/i18n/", "i18next", 4);
 
 if (issues.length > 0) {
-  console.error('Exports are out of sync with .po files!');
-  issues.forEach(i => console.error(`  ${i.type}: ${i.key} (${i.lang})`));
+  console.error("Exports are out of sync with .po files!");
+  issues.forEach((i) => console.error(`  ${i.type}: ${i.key} (${i.lang})`));
 }
 ```
 
